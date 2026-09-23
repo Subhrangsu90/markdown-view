@@ -6,6 +6,12 @@
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
     "noImplicitReturns": true,
+    "paths": {
+      "md-core": [
+        "./projects/md-core/src/public-api.ts",
+        "./dist/md-core"
+      ]
+    },
     "noFallthroughCasesInSwitch": true,
     "skipLibCheck": true,
     "isolatedModules": true,
@@ -26,6 +32,12 @@
     },
     {
       "path": "./tsconfig.spec.json"
+    },
+    {
+      "path": "./projects/md-core/tsconfig.lib.json"
+    },
+    {
+      "path": "./projects/md-core/tsconfig.spec.json"
     }
   ]
 }

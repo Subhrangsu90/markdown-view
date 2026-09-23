@@ -1,0 +1,14 @@
+<div class="split-container" #container>
+  <div class="split-left" [style.width.%]="leftWidth()">
+    <ng-content select="[left]" />
+  </div>
+  <div
+    class="split-divider"
+    (mousedown)="onDividerMouseDown($event)"
+  >
+    <div class="divider-line"></div>
+  </div>
+  <div class="split-right" [style.width.%]="100 - leftWidth()">
+    <ng-content select="[right]" />
+  </div>
+</div>

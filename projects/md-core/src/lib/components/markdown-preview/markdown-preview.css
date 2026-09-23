@@ -1,0 +1,529 @@
+:host {
+  display: block;
+  height: 100%;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: var(--surface-hover) transparent;
+}
+
+:host::-webkit-scrollbar {
+  width: 6px;
+}
+
+:host::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+:host::-webkit-scrollbar-thumb {
+  background: var(--surface-hover);
+  border-radius: 3px;
+}
+
+:host::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
+.preview-container {
+  padding: 36px 52px 96px;
+  max-width: 860px;
+  margin: 0 auto;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  line-height: 1.75;
+  font-size: 15.5px;
+  letter-spacing: -0.01em;
+}
+
+/* ===== Headings (Notion Style) ===== */
+:host ::ng-deep h1 {
+  font-size: 2.25rem;
+  font-weight: 750;
+  margin-top: 2.4rem;
+  margin-bottom: 0.85rem;
+  letter-spacing: -0.035em;
+  color: var(--text-primary);
+  line-height: 1.25;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.65rem;
+  position: relative;
+}
+
+:host ::ng-deep h1:first-child {
+  margin-top: 0;
+}
+
+:host ::ng-deep h2 {
+  font-size: 1.65rem;
+  font-weight: 700;
+  margin-top: 2.1rem;
+  margin-bottom: 0.65rem;
+  letter-spacing: -0.025em;
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+
+:host ::ng-deep h3 {
+  font-size: 1.3rem;
+  font-weight: 650;
+  margin-top: 1.65rem;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.015em;
+  color: var(--text-primary);
+  line-height: 1.35;
+}
+
+:host ::ng-deep h4,
+:host ::ng-deep h5,
+:host ::ng-deep h6 {
+  font-size: 1.08rem;
+  font-weight: 600;
+  margin-top: 1.35rem;
+  margin-bottom: 0.45rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ===== Paragraphs ===== */
+:host ::ng-deep p {
+  margin: 0.85rem 0;
+  color: var(--text-primary);
+  line-height: 1.75;
+}
+
+/* ===== Links ===== */
+:host ::ng-deep a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-color: var(--accent-dim);
+  text-underline-offset: 3px;
+  transition: all 0.15s ease;
+  font-weight: 500;
+}
+
+:host ::ng-deep a:hover {
+  color: var(--accent-hover);
+  text-decoration-color: var(--accent);
+  background: var(--surface-active);
+  border-radius: 3px;
+  padding: 0 3px;
+}
+
+/* ===== LISTS (Fix for Tailwind Reset) ===== */
+:host ::ng-deep ul {
+  list-style-type: disc !important;
+  list-style-position: outside !important;
+  padding-left: 1.75rem !important;
+  margin: 0.7rem 0 !important;
+}
+
+:host ::ng-deep ol {
+  list-style-type: decimal !important;
+  list-style-position: outside !important;
+  padding-left: 1.75rem !important;
+  margin: 0.7rem 0 !important;
+}
+
+:host ::ng-deep ul ul {
+  list-style-type: circle !important;
+  margin: 0.3rem 0 !important;
+  padding-left: 1.5rem !important;
+}
+
+:host ::ng-deep ul ul ul {
+  list-style-type: square !important;
+}
+
+:host ::ng-deep ol ol {
+  list-style-type: lower-alpha !important;
+  margin: 0.3rem 0 !important;
+  padding-left: 1.5rem !important;
+}
+
+:host ::ng-deep ol ol ol {
+  list-style-type: lower-roman !important;
+}
+
+:host ::ng-deep li {
+  margin: 0.35rem 0 !important;
+  padding-left: 0.25rem !important;
+  line-height: 1.7;
+  color: var(--text-primary) !important;
+  display: list-item !important;
+}
+
+:host ::ng-deep li::marker {
+  color: var(--accent) !important;
+  font-weight: 600;
+}
+
+/* Task lists (Notion Checkboxes) */
+:host ::ng-deep li:has(input[type='checkbox']) {
+  list-style: none !important;
+  list-style-type: none !important;
+  display: flex !important;
+  align-items: flex-start;
+  gap: 10px;
+  padding-left: 0 !important;
+  margin: 0.45rem 0 !important;
+}
+
+:host ::ng-deep li input[type='checkbox'] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 17px;
+  height: 17px;
+  margin: 4px 0 0 0;
+  border-radius: 4px;
+  border: 1.5px solid var(--text-tertiary);
+  background: var(--surface-hover);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+:host ::ng-deep li input[type='checkbox']:hover {
+  border-color: var(--accent);
+  background: var(--surface-active);
+}
+
+:host ::ng-deep li input[type='checkbox']:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+:host ::ng-deep li input[type='checkbox']:checked::after {
+  content: '';
+  width: 5px;
+  height: 9px;
+  border-right: 2px solid #ffffff;
+  border-bottom: 2px solid #ffffff;
+  transform: rotate(45deg) translate(-0.5px, -1px);
+}
+
+/* ===== Inline Code (Notion Style) ===== */
+:host ::ng-deep code:not(pre code) {
+  background: var(--code-inline-bg) !important;
+  color: var(--code-inline-text) !important;
+  border: 1px solid var(--code-inline-border) !important;
+  padding: 0.15rem 0.45rem !important;
+  border-radius: 5px !important;
+  font-size: 0.88em !important;
+  font-family: var(--font-mono) !important;
+  white-space: break-spaces;
+  vertical-align: baseline;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* ===== Code Blocks with Header & Copy Button ===== */
+:host ::ng-deep pre {
+  position: relative;
+  background: var(--surface-code) !important;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0 !important;
+  margin: 1.4rem 0;
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+
+:host ::ng-deep .code-block-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: var(--surface-hover);
+  border-bottom: 1px solid var(--border);
+  user-select: none;
+}
+
+:host ::ng-deep .code-lang {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  font-family: var(--font-sans);
+}
+
+:host ::ng-deep .copy-code-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-secondary);
+  font-size: 11.5px;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+:host ::ng-deep .copy-code-btn:hover {
+  background: var(--surface-active);
+  border-color: var(--accent-dim);
+  color: var(--text-primary);
+}
+
+:host ::ng-deep .copy-code-btn.copied {
+  background: rgba(34, 197, 94, 0.15);
+  border-color: rgba(34, 197, 94, 0.3);
+  color: #22c55e;
+}
+
+:host ::ng-deep pre code {
+  display: block;
+  padding: 14px 18px !important;
+  background: none !important;
+  font-family: var(--font-mono);
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--text-primary);
+  overflow-x: auto;
+  tab-size: 2;
+}
+
+:host ::ng-deep pre code::-webkit-scrollbar {
+  height: 5px;
+}
+
+:host ::ng-deep pre code::-webkit-scrollbar-thumb {
+  background: var(--surface-hover);
+  border-radius: 3px;
+}
+
+/* ===== Notion Callouts & Blockquotes ===== */
+:host ::ng-deep blockquote {
+  margin: 1.35rem 0;
+  padding: 14px 20px;
+  border-left: 3.5px solid var(--accent);
+  background: var(--surface-active);
+  border-radius: 0 8px 8px 0;
+  box-shadow: var(--shadow-sm);
+}
+
+:host ::ng-deep blockquote p {
+  color: var(--text-secondary);
+  font-style: italic;
+  margin: 0.3rem 0;
+}
+
+:host ::ng-deep blockquote p:first-child {
+  margin-top: 0;
+}
+
+:host ::ng-deep blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+/* Notion Callouts */
+:host ::ng-deep blockquote.notion-callout {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 18px;
+  border-left: none;
+  border-radius: 8px;
+  font-style: normal;
+  box-shadow: var(--shadow-sm);
+}
+
+:host ::ng-deep blockquote.notion-callout p {
+  font-style: normal;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+:host ::ng-deep .callout-icon {
+  font-size: 1.25rem;
+  line-height: 1.2;
+  flex-shrink: 0;
+}
+
+:host ::ng-deep blockquote.callout-note {
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+:host ::ng-deep blockquote.callout-tip {
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+:host ::ng-deep blockquote.callout-important {
+  background: rgba(168, 85, 247, 0.08);
+  border: 1px solid rgba(168, 85, 247, 0.2);
+}
+
+:host ::ng-deep blockquote.callout-warning {
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+:host ::ng-deep blockquote.callout-caution {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+/* ===== Tables (Notion Style) ===== */
+:host ::ng-deep table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 1.5rem 0;
+  font-size: 0.92rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+:host ::ng-deep th {
+  background: var(--surface-hover);
+  text-align: left;
+  padding: 11px 16px;
+  font-weight: 650;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+}
+
+:host ::ng-deep td {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+:host ::ng-deep tr:last-child td {
+  border-bottom: none;
+}
+
+:host ::ng-deep th:last-child,
+:host ::ng-deep td:last-child {
+  border-right: none;
+}
+
+:host ::ng-deep tr:hover td {
+  background: var(--surface-hover);
+}
+
+/* ===== Horizontal Rule ===== */
+:host ::ng-deep hr {
+  border: none;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--border-strong) 20%, var(--border-strong) 80%, transparent 100%);
+  margin: 2.2rem 0;
+}
+
+/* ===== Images ===== */
+:host ::ng-deep img {
+  max-width: 100%;
+  border-radius: 10px;
+  margin: 1.25rem 0;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border);
+}
+
+/* ===== Strong / Em / Strikethrough ===== */
+:host ::ng-deep strong {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+:host ::ng-deep em {
+  color: var(--accent);
+  font-style: italic;
+}
+
+:host ::ng-deep del {
+  color: var(--text-tertiary);
+  text-decoration: line-through;
+}
+
+/* ===== Details / Summary (Notion Toggles) ===== */
+:host ::ng-deep details {
+  margin: 0.8rem 0;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: var(--surface-hover);
+  border: 1px solid var(--border);
+}
+
+:host ::ng-deep summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text-primary);
+  user-select: none;
+  padding: 4px 0;
+}
+
+:host ::ng-deep summary:hover {
+  color: var(--accent);
+}
+
+/* ===== Responsive Mobile Styles ===== */
+@media (max-width: 768px) {
+  .preview-container {
+    padding: 18px 16px 84px;
+    font-size: 14.5px;
+    line-height: 1.68;
+  }
+
+  :host ::ng-deep h1 {
+    font-size: 1.8rem;
+    margin-top: 1.6rem;
+    margin-bottom: 0.6rem;
+    padding-bottom: 0.45rem;
+  }
+
+  :host ::ng-deep h2 {
+    font-size: 1.4rem;
+    margin-top: 1.4rem;
+    margin-bottom: 0.5rem;
+  }
+
+  :host ::ng-deep h3 {
+    font-size: 1.18rem;
+    margin-top: 1.2rem;
+  }
+
+  :host ::ng-deep ul,
+  :host ::ng-deep ol {
+    padding-left: 1.35rem !important;
+  }
+
+  :host ::ng-deep table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  :host ::ng-deep pre code {
+    font-size: 12.5px;
+    padding: 12px 14px !important;
+  }
+
+  :host ::ng-deep blockquote {
+    padding: 10px 14px;
+    margin: 1rem 0;
+  }
+
+  :host ::ng-deep blockquote.notion-callout {
+    padding: 10px 14px;
+    gap: 8px;
+  }
+}

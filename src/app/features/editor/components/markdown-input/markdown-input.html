@@ -1,0 +1,15 @@
+<div class="input-container">
+  <textarea
+    #textarea
+    class="markdown-textarea"
+    [value]="content()"
+    (input)="onInput($event)"
+    (scroll)="onScroll($event)"
+    (keydown)="onKeyDown($event)"
+    placeholder="Start writing markdown..."
+    spellcheck="false"
+    autocomplete="off"
+    autocorrect="off"
+    autocapitalize="off"
+  ></textarea>
+</div>
