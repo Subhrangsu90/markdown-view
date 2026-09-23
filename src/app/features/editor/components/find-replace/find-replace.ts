@@ -1,8 +1,10 @@
 import { Component, input, output, signal } from '@angular/core';
+import { MdIcon } from 'md-core';
 
 @Component({
   selector: 'app-find-replace',
   standalone: true,
+  imports: [MdIcon],
   templateUrl: './find-replace.html',
   styleUrl: './find-replace.css',
 })

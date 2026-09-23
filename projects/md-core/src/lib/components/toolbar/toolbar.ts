@@ -1,4 +1,5 @@
 import { Component, output } from '@angular/core';
+import { MdIcon } from '../../icons/icon.component';
 
 export interface ToolbarAction {
   type: 'wrap' | 'prefix' | 'insert';
@@ -10,6 +11,7 @@ export interface ToolbarAction {
 
 @Component({
   selector: 'md-toolbar',
+  imports: [MdIcon],
   templateUrl: './toolbar.html',
   styleUrl: './toolbar.css',
 })

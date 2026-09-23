@@ -1,4 +1,5 @@
 import { Component, input, output, computed } from '@angular/core';
+import { MdIcon } from '../../icons/icon.component';
 
 export interface TocHeading {
   id: string;
@@ -10,6 +11,7 @@ export interface TocHeading {
 @Component({
   selector: 'md-table-of-contents',
   standalone: true,
+  imports: [MdIcon],
   templateUrl: './table-of-contents.html',
   styleUrl: './table-of-contents.css',
 })

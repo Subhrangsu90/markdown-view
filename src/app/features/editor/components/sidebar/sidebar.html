@@ -2,25 +2,17 @@
   <!-- Sidebar Header -->
   <div class="sidebar-header">
     <div class="sidebar-brand">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-      </svg>
+      <md-icon name="brand" [size]="20" />
       <span class="brand-text">MarkdownView</span>
     </div>
     <button class="mobile-close-btn" (click)="toggleSidebar.emit()" title="Close sidebar" aria-label="Close sidebar">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <line x1="18" y1="6" x2="6" y2="18"/>
-        <line x1="6" y1="6" x2="18" y2="18"/>
-      </svg>
+      <md-icon name="close" [size]="18" />
     </button>
   </div>
 
   <!-- Search -->
   <div class="sidebar-search">
-    <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-    </svg>
+    <md-icon name="search" [size]="14" className="search-icon" />
     <input
       type="text"
       class="search-input"
@@ -33,36 +25,58 @@
   <!-- Actions -->
   <div class="sidebar-actions">
     <button class="action-btn primary" (click)="createDocument()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-      </svg>
+      <md-icon name="plus" [size]="14" [strokeWidth]="2.5" />
       New Page
     </button>
     <div class="action-row">
-      <button class="action-btn secondary" (click)="importFiles()">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-          <polyline points="14 2 14 8 20 8"/>
-        </svg>
+      <button class="action-btn secondary" (click)="startCreateFolder()" title="Create New Folder">
+        <md-icon name="folder-plus" [size]="13" />
+        + Folder
+      </button>
+      <button class="action-btn secondary" (click)="importFiles()" title="Import Markdown files">
+        <md-icon name="file" [size]="13" />
         File
       </button>
-      <button class="action-btn secondary" (click)="importFolder()">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-        </svg>
+      <button class="action-btn secondary" (click)="importFolder()" title="Import entire folder directly">
+        <md-icon name="folder" [size]="13" />
         Folder
+      </button>
+      <button class="action-btn secondary" (click)="exportAllZip()" title="Export all documents as ZIP archive">
+        <md-icon name="zip" [size]="13" />
+        ZIP
       </button>
     </div>
   </div>
+
+  <!-- Inline New Folder Creator -->
+  @if (isCreatingFolder()) {
+    <div class="new-folder-box">
+      <md-icon name="folder" [size]="14" />
+      <input
+        type="text"
+        class="folder-input"
+        placeholder="New folder name..."
+        [ngModel]="newFolderName()"
+        (ngModelChange)="newFolderName.set($event)"
+        (keydown.enter)="confirmCreateFolder()"
+        (keydown.escape)="cancelCreateFolder()"
+        autofocus
+      />
+      <button class="folder-action-icon-btn check" (click)="confirmCreateFolder()" title="Create folder">
+        <md-icon name="check" [size]="12" [strokeWidth]="3" />
+      </button>
+      <button class="folder-action-icon-btn close" (click)="cancelCreateFolder()" title="Cancel">
+        <md-icon name="close" [size]="12" [strokeWidth]="2.5" />
+      </button>
+    </div>
+  }
 
   <!-- Document List Container -->
   <div class="sidebar-list">
     <!-- Pinned / Favorites Section -->
     @if (filteredFavoriteDocuments().length > 0) {
       <div class="section-divider">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-        </svg>
+        <md-icon name="star-filled" [size]="12" />
         <span>Favorites</span>
       </div>
 
@@ -77,7 +91,7 @@
             (click)="cycleIcon($event, doc.id, doc.icon)"
             title="Click to change icon"
           >
-            <span>{{ doc.icon || '📄' }}</span>
+            <md-icon [name]="doc.icon || 'document'" [size]="14" />
           </button>
           <div class="doc-info">
             <span class="doc-title">{{ doc.title || 'Untitled' }}</span>
@@ -91,9 +105,7 @@
               (click)="toggleFavorite($event, doc.id)"
               title="Unpin favorite"
             >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2">
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-              </svg>
+              <md-icon name="star-filled" [size]="13" />
             </button>
             <!-- Duplicate button -->
             <button
@@ -101,10 +113,7 @@
               (click)="duplicateDocument($event, doc.id)"
               title="Duplicate"
             >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-              </svg>
+              <md-icon name="duplicate" [size]="12" />
             </button>
             <!-- Delete button -->
             <button
@@ -112,82 +121,213 @@
               (click)="deleteDocument($event, doc.id)"
               title="Delete"
             >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="18" y1="6" x2="6" y2="18"/>
-                <line x1="6" y1="6" x2="18" y2="18"/>
-              </svg>
+              <md-icon name="delete" [size]="12" />
             </button>
           </div>
         </div>
       }
     }
 
-    <!-- Regular Pages Section -->
-    @if (filteredFavoriteDocuments().length > 0 && filteredRegularDocuments().length > 0) {
+    <!-- Folders Section -->
+    @if (folderGroups().length > 0) {
       <div class="section-divider">
-        <span>Pages</span>
+        <md-icon name="folder" [size]="12" />
+        <span>Folders</span>
       </div>
-    }
 
-    @for (doc of filteredRegularDocuments(); track doc.id) {
-      <div
-        class="doc-item"
-        [class.active]="store.activeId() === doc.id"
-        (click)="selectDocument(doc.id)"
-      >
-        <button
-          class="doc-icon-btn"
-          (click)="cycleIcon($event, doc.id, doc.icon)"
-          title="Click to change icon"
-        >
-          <span>{{ doc.icon || '📄' }}</span>
-        </button>
-        <div class="doc-info">
-          <span class="doc-title">{{ doc.title || 'Untitled' }}</span>
-          <span class="doc-date">{{ doc.updatedAt | timeAgo }}</span>
-        </div>
+      @for (group of folderGroups(); track group.name) {
+        <div class="folder-group">
+          <!-- Folder Header Row -->
+          <div
+            class="folder-header"
+            (click)="toggleFolder(group.name, $event)"
+            [class.collapsed]="isFolderCollapsed(group.name)"
+          >
+            <button class="folder-chevron-btn" title="Toggle folder">
+              <md-icon
+                [name]="isFolderCollapsed(group.name) ? 'chevron-right' : 'chevron-down'"
+                [size]="12"
+                [strokeWidth]="2.5"
+              />
+            </button>
 
-        <div class="doc-actions">
-          <!-- Favorite button -->
-          <button
-            class="doc-action-btn star-btn"
-            (click)="toggleFavorite($event, doc.id)"
-            title="Star favorite"
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-            </svg>
-          </button>
-          <!-- Duplicate button -->
-          <button
-            class="doc-action-btn"
-            (click)="duplicateDocument($event, doc.id)"
-            title="Duplicate"
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-            </svg>
-          </button>
-          <!-- Delete button -->
-          <button
-            class="doc-action-btn delete-btn"
-            (click)="deleteDocument($event, doc.id)"
-            title="Delete"
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18"/>
-              <line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
-          </button>
-        </div>
-      </div>
-    } @empty {
-      @if (filteredFavoriteDocuments().length === 0) {
-        <div class="empty-list">
-          <p>No documents found</p>
+            <span class="folder-icon">
+              <md-icon [name]="isFolderCollapsed(group.name) ? 'folder' : 'folder-open'" [size]="14" class="folder-svg-icon" />
+            </span>
+
+            @if (editingFolder() === group.name) {
+              <div class="folder-edit-box" (click)="$event.stopPropagation()">
+                <input
+                  type="text"
+                  class="folder-rename-input"
+                  [ngModel]="renameFolderName()"
+                  (ngModelChange)="renameFolderName.set($event)"
+                  (keydown.enter)="confirmRenameFolder(group.name)"
+                  (keydown.escape)="cancelRenameFolder()"
+                  autofocus
+                />
+                <button class="folder-action-icon-btn check" (click)="confirmRenameFolder(group.name)" title="Save name">
+                  <md-icon name="check" [size]="10" [strokeWidth]="3" />
+                </button>
+                <button class="folder-action-icon-btn close" (click)="cancelRenameFolder()" title="Cancel">
+                  <md-icon name="close" [size]="10" [strokeWidth]="2.5" />
+                </button>
+              </div>
+            } @else {
+              <span class="folder-title">{{ group.name }}</span>
+              <span class="folder-count">{{ group.totalCount }}</span>
+
+              <div class="folder-hover-actions" (click)="$event.stopPropagation()">
+                <button
+                  class="folder-mini-btn"
+                  (click)="createDocument(group.name)"
+                  title="Add new page in this folder"
+                >
+                  <md-icon name="plus" [size]="11" [strokeWidth]="2.5" />
+                </button>
+                <button
+                  class="folder-mini-btn"
+                  (click)="exportFolder($event, group.name)"
+                  title="Export folder as ZIP archive"
+                >
+                  <md-icon name="zip" [size]="11" />
+                </button>
+                <button
+                  class="folder-mini-btn"
+                  (click)="startRenameFolder($event, group.name)"
+                  title="Rename folder"
+                >
+                  <md-icon name="edit" [size]="11" />
+                </button>
+                <button
+                  class="folder-mini-btn delete-btn"
+                  (click)="deleteFolder($event, group.name)"
+                  title="Delete folder"
+                >
+                  <md-icon name="delete" [size]="11" />
+                </button>
+              </div>
+            }
+          </div>
+
+          <!-- Folder Document Items -->
+          @if (!isFolderCollapsed(group.name)) {
+            <div class="folder-items">
+              @for (doc of group.documents; track doc.id) {
+                <div
+                  class="doc-item nested-doc-item"
+                  [class.active]="store.activeId() === doc.id"
+                  (click)="selectDocument(doc.id)"
+                >
+                  <button
+                    class="doc-icon-btn"
+                    (click)="cycleIcon($event, doc.id, doc.icon)"
+                    title="Click to change icon"
+                  >
+                    <md-icon [name]="doc.icon || 'document'" [size]="14" />
+                  </button>
+                  <div class="doc-info">
+                    <span class="doc-title">{{ doc.title || 'Untitled' }}</span>
+                    <span class="doc-date">{{ doc.updatedAt | timeAgo }}</span>
+                  </div>
+
+                  <div class="doc-actions">
+                    <button
+                      class="doc-action-btn"
+                      [class.starred]="doc.isFavorite"
+                      (click)="toggleFavorite($event, doc.id)"
+                      [title]="doc.isFavorite ? 'Unpin favorite' : 'Star favorite'"
+                    >
+                      <md-icon [name]="doc.isFavorite ? 'star-filled' : 'star'" [size]="13" />
+                    </button>
+                    <button
+                      class="doc-action-btn"
+                      (click)="duplicateDocument($event, doc.id)"
+                      title="Duplicate"
+                    >
+                      <md-icon name="duplicate" [size]="12" />
+                    </button>
+                    <button
+                      class="doc-action-btn delete-btn"
+                      (click)="deleteDocument($event, doc.id)"
+                      title="Delete"
+                    >
+                      <md-icon name="delete" [size]="12" />
+                    </button>
+                  </div>
+                </div>
+              } @empty {
+                <div class="folder-empty-placeholder" (click)="createDocument(group.name)">
+                  <span>+ Add a page in {{ group.name }}</span>
+                </div>
+              }
+            </div>
+          }
         </div>
       }
+    }
+
+    <!-- Root / Uncategorized Pages Section -->
+    @if (filteredUncategorizedDocuments().length > 0) {
+      <div class="section-divider">
+        <md-icon name="file" [size]="12" />
+        <span>Pages</span>
+      </div>
+
+      @for (doc of filteredUncategorizedDocuments(); track doc.id) {
+        <div
+          class="doc-item"
+          [class.active]="store.activeId() === doc.id"
+          (click)="selectDocument(doc.id)"
+        >
+          <button
+            class="doc-icon-btn"
+            (click)="cycleIcon($event, doc.id, doc.icon)"
+            title="Click to change icon"
+          >
+            <md-icon [name]="doc.icon || 'document'" [size]="14" />
+          </button>
+          <div class="doc-info">
+            <span class="doc-title">{{ doc.title || 'Untitled' }}</span>
+            <span class="doc-date">{{ doc.updatedAt | timeAgo }}</span>
+          </div>
+
+          <div class="doc-actions">
+            <!-- Favorite button -->
+            <button
+              class="doc-action-btn star-btn"
+              [class.starred]="doc.isFavorite"
+              (click)="toggleFavorite($event, doc.id)"
+              title="Star favorite"
+            >
+              <md-icon [name]="doc.isFavorite ? 'star-filled' : 'star'" [size]="13" />
+            </button>
+            <!-- Duplicate button -->
+            <button
+              class="doc-action-btn"
+              (click)="duplicateDocument($event, doc.id)"
+              title="Duplicate"
+            >
+              <md-icon name="duplicate" [size]="12" />
+            </button>
+            <!-- Delete button -->
+            <button
+              class="doc-action-btn delete-btn"
+              (click)="deleteDocument($event, doc.id)"
+              title="Delete"
+            >
+              <md-icon name="delete" [size]="12" />
+            </button>
+          </div>
+        </div>
+      }
+    }
+
+    <!-- Empty State -->
+    @if (filteredFavoriteDocuments().length === 0 && folderGroups().length === 0 && filteredUncategorizedDocuments().length === 0) {
+      <div class="empty-list">
+        <p>No documents found</p>
+      </div>
     }
   </div>
 

@@ -1,14 +1,7 @@
 <div class="toc-container">
   <div class="toc-header">
     <div class="toc-title">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <line x1="8" y1="6" x2="21" y2="6"/>
-        <line x1="8" y1="12" x2="21" y2="12"/>
-        <line x1="8" y1="18" x2="21" y2="18"/>
-        <line x1="3" y1="6" x2="3.01" y2="6"/>
-        <line x1="3" y1="12" x2="3.01" y2="12"/>
-        <line x1="3" y1="18" x2="3.01" y2="18"/>
-      </svg>
+      <md-icon name="toc" [size]="15" />
       <span>Outline</span>
     </div>
     <span class="toc-badge">{{ headings().length }}</span>
@@ -27,11 +20,7 @@
       </a>
     } @empty {
       <div class="toc-empty">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <circle cx="12" cy="12" r="10"/>
-          <line x1="12" y1="16" x2="12" y2="12"/>
-          <line x1="12" y1="8" x2="12.01" y2="8"/>
-        </svg>
+        <md-icon name="info" [size]="24" [strokeWidth]="1.5" />
         <p>No headings detected</p>
         <span class="toc-hint">Use #, ##, or ### to create headings</span>
       </div>

@@ -16,7 +16,9 @@
         (click)="onSelect(cmd)"
         (mouseenter)="selectedIndex.set(idx)"
       >
-        <span class="slash-icon">{{ cmd.icon }}</span>
+        <span class="slash-icon">
+          <md-icon [name]="cmd.icon" [size]="16" />
+        </span>
         <div class="slash-item-content">
           <span class="slash-item-title">{{ cmd.title }}</span>
           <span class="slash-item-desc">{{ cmd.description }}</span>

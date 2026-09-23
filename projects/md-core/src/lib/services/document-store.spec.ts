@@ -76,4 +76,69 @@ describe('DocumentStore', () => {
     // Normalized title match
     expect(store.findByPathOrTitle('14 local development setup.md')?.id).toBe(doc.id);
   });
+
+  it('should create custom folders and compute unique sorted folders', () => {
+    expect(store.createFolder('Engineering')).toBe(true);
+    expect(store.createFolder('Engineering')).toBe(false); // duplicate should return false
+    expect(store.createFolder('Design')).toBe(true);
+
+    const folders = store.folders();
+    expect(folders).toContain('Engineering');
+    expect(folders).toContain('Design');
+  });
+
+  it('should create document directly inside a folder', () => {
+    const doc = store.create('Architecture Plan', '# Arch', 'Engineering');
+    expect(doc.folder).toBe('Engineering');
+    expect(store.getDocumentsInFolder('Engineering').map((d) => d.id)).toContain(doc.id);
+    expect(store.folders()).toContain('Engineering');
+  });
+
+  it('should move document to another folder or root', () => {
+    const doc = store.create('Moving Doc', 'Content', 'OldFolder');
+    expect(doc.folder).toBe('OldFolder');
+
+    store.moveToFolder(doc.id, 'NewFolder');
+    const updated = store.documents().find((d) => d.id === doc.id);
+    expect(updated?.folder).toBe('NewFolder');
+
+    // Move to root
+    store.moveToFolder(doc.id, null);
+    const atRoot = store.documents().find((d) => d.id === doc.id);
+    expect(atRoot?.folder).toBeUndefined();
+    expect(store.uncategorizedDocuments().some((d) => d.id === doc.id)).toBe(true);
+  });
+
+  it('should rename a folder and update its documents', () => {
+    store.createFolder('Docs');
+    const doc = store.create('Intro', 'Welcome', 'Docs');
+
+    store.renameFolder('Docs', 'Documentation');
+    expect(store.folders()).toContain('Documentation');
+    expect(store.folders()).not.toContain('Docs');
+
+    const updatedDoc = store.documents().find((d) => d.id === doc.id);
+    expect(updatedDoc?.folder).toBe('Documentation');
+  });
+
+  it('should delete a folder and unassign documents to root by default', () => {
+    store.createFolder('TempFolder');
+    const doc = store.create('Keep Me', 'Text', 'TempFolder');
+
+    store.deleteFolder('TempFolder', false);
+    expect(store.folders()).not.toContain('TempFolder');
+
+    const survivingDoc = store.documents().find((d) => d.id === doc.id);
+    expect(survivingDoc).toBeTruthy();
+    expect(survivingDoc?.folder).toBeUndefined();
+  });
+
+  it('should delete a folder and its documents when deleteDocuments is true', () => {
+    store.createFolder('TrashFolder');
+    const doc = store.create('Delete Me', 'Text', 'TrashFolder');
+
+    store.deleteFolder('TrashFolder', true);
+    expect(store.folders()).not.toContain('TrashFolder');
+    expect(store.documents().some((d) => d.id === doc.id)).toBe(false);
+  });
 });

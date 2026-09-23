@@ -5,6 +5,7 @@ export interface MarkdownDocument {
   createdAt: number;
   updatedAt: number;
   path?: string;
+  folder?: string;
   parentId?: string | null;
   icon?: string;
   isFavorite?: boolean;
@@ -15,7 +16,8 @@ export function createDocument(
   title: string = 'Untitled',
   content: string = '',
   parentId?: string | null,
-  icon: string = '📄',
+  icon: string = 'document',
+  folder?: string,
 ): MarkdownDocument {
   const now = Date.now();
   return {
@@ -26,6 +28,7 @@ export function createDocument(
     updatedAt: now,
     parentId: parentId ?? null,
     icon,
+    folder: folder?.trim() || undefined,
     isFavorite: false,
     tags: [],
   };

@@ -18,7 +18,12 @@ import {
   ThemeToggle,
   TableOfContents,
   TocHeading,
+  FileExportService,
+  MdIcon,
+  DOCUMENT_ICON_PALETTE,
+  resolveIconName,
 } from 'md-core';
+import { FormsModule } from '@angular/forms';
 import { Sidebar } from './components/sidebar/sidebar';
 import { MarkdownInput, SlashTriggerEvent } from './components/markdown-input/markdown-input';
 import { SlashMenu, SlashCommand } from './components/slash-menu/slash-menu';
@@ -27,12 +32,11 @@ import { ShortcutsModal } from './components/shortcuts-modal/shortcuts-modal';
 
 export type ViewMode = 'edit' | 'preview' | 'split';
 
-const EMOJI_PALETTE = ['📄', '📝', '🚀', '💡', '⚡', '📊', '📚', '🎯', '✨', '🔥', '💻', '🎨', '📌', '🛠️'];
-
 @Component({
   selector: 'app-editor',
   standalone: true,
   imports: [
+    FormsModule,
     Sidebar,
     MarkdownInput,
     Toolbar,
@@ -43,6 +47,7 @@ const EMOJI_PALETTE = ['📄', '📝', '🚀', '💡', '⚡', '📊', '📚', '�
     SlashMenu,
     FindReplace,
     ShortcutsModal,
+    MdIcon,
   ],
   templateUrl: './editor.html',
   styleUrl: './editor.css',
@@ -50,6 +55,7 @@ const EMOJI_PALETTE = ['📄', '📝', '🚀', '💡', '⚡', '📊', '📚', '�
 export class Editor {
   protected readonly store = inject(DocumentStore);
   protected readonly fileImport = inject(FileImportService);
+  protected readonly fileExport = inject(FileExportService);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly isBrowser = isPlatformBrowser(this.platformId);
 
@@ -59,6 +65,8 @@ export class Editor {
   protected readonly isDragOver = signal(false);
   protected readonly toolbarAction = signal<ToolbarAction | null>(null);
   protected readonly isExportMenuOpen = signal(false);
+  protected readonly isFolderMenuOpen = signal(false);
+  protected readonly headerNewFolderInput = signal('');
   protected readonly copySuccessMessage = signal<string | null>(null);
 
   // Advanced features state
@@ -272,11 +280,12 @@ export class Editor {
     });
   }
 
-  /** Cycle document emoji icon */
-  protected cycleHeaderIcon(docId: string, currentIcon: string = '📄'): void {
-    const currentIndex = EMOJI_PALETTE.indexOf(currentIcon);
-    const nextIndex = (currentIndex + 1) % EMOJI_PALETTE.length;
-    this.store.updateIcon(docId, EMOJI_PALETTE[nextIndex]);
+  /** Cycle document SVG icon */
+  protected cycleHeaderIcon(docId: string, currentIcon: string = 'document'): void {
+    const resolved = resolveIconName(currentIcon);
+    const currentIndex = DOCUMENT_ICON_PALETTE.indexOf(resolved);
+    const nextIndex = (currentIndex + 1) % DOCUMENT_ICON_PALETTE.length;
+    this.store.updateIcon(docId, DOCUMENT_ICON_PALETTE[nextIndex]);
   }
 
   /** Export as Markdown file */
@@ -354,6 +363,14 @@ export class Editor {
     this.notifyUser('Exported as HTML!');
   }
 
+  /** Export all documents as a structured ZIP archive preserving folders */
+  protected async exportAllZip(): Promise<void> {
+    if (!this.isBrowser) return;
+    this.isExportMenuOpen.set(false);
+    await this.fileExport.exportAllAsZip(this.store.documents());
+    this.notifyUser('Exported all documents as ZIP!');
+  }
+
   /** Export to PDF via Browser Print */
   protected exportPdf(): void {
     if (!this.isBrowser) return;
@@ -375,6 +392,28 @@ export class Editor {
 
   protected toggleExportMenu(): void {
     this.isExportMenuOpen.update((v) => !v);
+    this.isFolderMenuOpen.set(false);
+  }
+
+  protected toggleFolderMenu(): void {
+    this.isFolderMenuOpen.update((v) => !v);
+    this.isExportMenuOpen.set(false);
+  }
+
+  protected moveToFolder(docId: string, folder: string | null): void {
+    this.store.moveToFolder(docId, folder);
+    this.isFolderMenuOpen.set(false);
+    this.notifyUser(folder ? `Moved to folder "${folder}"` : 'Moved to root pages');
+  }
+
+  protected createAndMoveToFolder(docId: string): void {
+    const name = this.headerNewFolderInput().trim();
+    if (name) {
+      this.store.moveToFolder(docId, name);
+      this.notifyUser(`Moved to new folder "${name}"`);
+    }
+    this.headerNewFolderInput.set('');
+    this.isFolderMenuOpen.set(false);
   }
 
   private notifyUser(message: string): void {

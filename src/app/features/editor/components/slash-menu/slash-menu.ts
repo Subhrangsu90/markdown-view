@@ -8,12 +8,13 @@ import {
   ElementRef,
   inject,
 } from '@angular/core';
+import { MdIcon, IconName } from 'md-core';
 
 export interface SlashCommand {
   id: string;
   title: string;
   description: string;
-  icon: string;
+  icon: IconName;
   category: 'Basic' | 'Lists' | 'Advanced';
   snippet: string;
 }
@@ -23,7 +24,7 @@ const COMMANDS: SlashCommand[] = [
     id: 'h1',
     title: 'Heading 1',
     description: 'Large section heading',
-    icon: 'H1',
+    icon: 'h1',
     category: 'Basic',
     snippet: '# ',
   },
@@ -31,7 +32,7 @@ const COMMANDS: SlashCommand[] = [
     id: 'h2',
     title: 'Heading 2',
     description: 'Medium section heading',
-    icon: 'H2',
+    icon: 'h2',
     category: 'Basic',
     snippet: '## ',
   },
@@ -39,7 +40,7 @@ const COMMANDS: SlashCommand[] = [
     id: 'h3',
     title: 'Heading 3',
     description: 'Small section heading',
-    icon: 'H3',
+    icon: 'h3',
     category: 'Basic',
     snippet: '### ',
   },
@@ -47,7 +48,7 @@ const COMMANDS: SlashCommand[] = [
     id: 'todo',
     title: 'To-do List',
     description: 'Track tasks with interactive checkboxes',
-    icon: '☑️',
+    icon: 'check-square',
     category: 'Lists',
     snippet: '- [ ] ',
   },
@@ -55,7 +56,7 @@ const COMMANDS: SlashCommand[] = [
     id: 'bullet',
     title: 'Bulleted List',
     description: 'Create a simple bulleted list',
-    icon: '•',
+    icon: 'list',
     category: 'Lists',
     snippet: '- ',
   },
@@ -63,7 +64,7 @@ const COMMANDS: SlashCommand[] = [
     id: 'numbered',
     title: 'Numbered List',
     description: 'Create an ordered sequence',
-    icon: '1.',
+    icon: 'list-ordered',
     category: 'Lists',
     snippet: '1. ',
   },
@@ -71,7 +72,7 @@ const COMMANDS: SlashCommand[] = [
     id: 'callout-note',
     title: 'Callout: Note',
     description: 'Informational highlight box',
-    icon: 'ℹ️',
+    icon: 'info',
     category: 'Advanced',
     snippet: '> [!NOTE]\n> ',
   },
@@ -79,7 +80,7 @@ const COMMANDS: SlashCommand[] = [
     id: 'callout-tip',
     title: 'Callout: Tip',
     description: 'Helpful advice or best practice',
-    icon: '💡',
+    icon: 'bulb',
     category: 'Advanced',
     snippet: '> [!TIP]\n> ',
   },
@@ -87,7 +88,7 @@ const COMMANDS: SlashCommand[] = [
     id: 'callout-warning',
     title: 'Callout: Warning',
     description: 'Important warning or caution box',
-    icon: '⚠️',
+    icon: 'warning',
     category: 'Advanced',
     snippet: '> [!WARNING]\n> ',
   },
@@ -95,7 +96,7 @@ const COMMANDS: SlashCommand[] = [
     id: 'code',
     title: 'Code Block',
     description: 'Syntax-highlighted code block',
-    icon: '</>',
+    icon: 'code',
     category: 'Advanced',
     snippet: '```typescript\n// write code here\n```\n',
   },
@@ -103,7 +104,7 @@ const COMMANDS: SlashCommand[] = [
     id: 'table',
     title: 'Table',
     description: 'Grid layout table with columns',
-    icon: '▦',
+    icon: 'table',
     category: 'Advanced',
     snippet: '| Feature | Status | Notes |\n|---|---|---|\n| Item 1 | Active | Details |\n| Item 2 | Done | Done |\n',
   },
@@ -111,7 +112,7 @@ const COMMANDS: SlashCommand[] = [
     id: 'math',
     title: 'Math Formula (KaTeX)',
     description: 'Display LaTeX mathematical equation',
-    icon: '∑',
+    icon: 'math',
     category: 'Advanced',
     snippet: '```math\n\\int_{-\\infty}^{\\infty} e^{-x^2} dx = \\sqrt{\\pi}\n```\n',
   },
@@ -119,7 +120,7 @@ const COMMANDS: SlashCommand[] = [
     id: 'mermaid',
     title: 'Mermaid Diagram',
     description: 'Interactive flowchart or sequence diagram',
-    icon: '📊',
+    icon: 'flowchart',
     category: 'Advanced',
     snippet: '```mermaid\ngraph TD\n  Start[Start] --> Process[Do Work]\n  Process --> Finish[Complete]\n```\n',
   },
@@ -127,7 +128,7 @@ const COMMANDS: SlashCommand[] = [
     id: 'quote',
     title: 'Quote',
     description: 'Capture a memorable quote',
-    icon: '❝',
+    icon: 'quote',
     category: 'Basic',
     snippet: '> ',
   },
@@ -135,7 +136,7 @@ const COMMANDS: SlashCommand[] = [
     id: 'divider',
     title: 'Divider',
     description: 'Visually separate content sections',
-    icon: '—',
+    icon: 'minus',
     category: 'Basic',
     snippet: '\n---\n\n',
   },
@@ -144,6 +145,7 @@ const COMMANDS: SlashCommand[] = [
 @Component({
   selector: 'app-slash-menu',
   standalone: true,
+  imports: [MdIcon],
   templateUrl: './slash-menu.html',
   styleUrl: './slash-menu.css',
 })

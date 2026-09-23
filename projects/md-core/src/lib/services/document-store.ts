@@ -4,6 +4,7 @@ import { MarkdownDocument, createDocument } from '../models/document.model';
 
 const STORAGE_KEY = 'md-view-documents';
 const ACTIVE_KEY = 'md-view-active-id';
+const FOLDERS_KEY = 'md-view-folders';
 
 @Injectable({ providedIn: 'root' })
 export class DocumentStore {
@@ -16,9 +17,13 @@ export class DocumentStore {
   /** ID of the active document */
   private readonly _activeId = signal<string | null>(this.loadActiveId());
 
+  /** User-created and imported folders */
+  private readonly _customFolders = signal<string[]>(this.loadFolders());
+
   /** Public readonly signals */
   readonly documents = this._documents.asReadonly();
   readonly activeId = this._activeId.asReadonly();
+  readonly customFolders = this._customFolders.asReadonly();
 
   /** Derived: currently active document */
   readonly activeDocument = computed(() => {
@@ -41,8 +46,30 @@ export class DocumentStore {
     this.sortedDocuments().filter((d) => !d.isFavorite),
   );
 
+  /** Derived: all active folders (union of custom folders and document folders) */
+  readonly folders = computed(() => {
+    const folderSet = new Set<string>();
+    for (const f of this._customFolders()) {
+      if (f.trim()) folderSet.add(f.trim());
+    }
+    for (const d of this._documents()) {
+      if (d.folder?.trim()) {
+        folderSet.add(d.folder.trim());
+      } else if (d.path && d.path.includes('/')) {
+        const inferred = d.path.substring(0, d.path.lastIndexOf('/')).trim();
+        if (inferred) folderSet.add(inferred);
+      }
+    }
+    return Array.from(folderSet).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+  });
+
+  /** Derived: documents without any folder (root documents) */
+  readonly uncategorizedDocuments = computed(() =>
+    this.sortedDocuments().filter((d) => !d.folder?.trim()),
+  );
+
   constructor() {
-    // Auto-persist to localStorage
+    // Auto-persist documents to localStorage
     effect(() => {
       const docs = this._documents();
       if (this.isBrowser) {
@@ -50,6 +77,7 @@ export class DocumentStore {
       }
     });
 
+    // Auto-persist activeId to localStorage
     effect(() => {
       const id = this._activeId();
       if (this.isBrowser) {
@@ -58,6 +86,14 @@ export class DocumentStore {
         } else {
           localStorage.removeItem(ACTIVE_KEY);
         }
+      }
+    });
+
+    // Auto-persist folders to localStorage
+    effect(() => {
+      const f = this._customFolders();
+      if (this.isBrowser) {
+        localStorage.setItem(FOLDERS_KEY, JSON.stringify(f));
       }
     });
 
@@ -77,12 +113,102 @@ export class DocumentStore {
     this._activeId.set(id);
   }
 
-  /** Create a new document and select it */
-  create(title: string = 'Untitled', content: string = ''): MarkdownDocument {
-    const doc = createDocument(title, content);
+  /** Create a new document and select it, optionally in a folder */
+  create(title: string = 'Untitled', content: string = '', folder?: string): MarkdownDocument {
+    const doc = createDocument(title, content, null, 'document', folder);
     this._documents.update((docs) => [...docs, doc]);
+    if (folder?.trim()) {
+      this.registerFolder(folder.trim());
+    }
     this._activeId.set(doc.id);
     return doc;
+  }
+
+  /** Create a new empty folder if it doesn't already exist */
+  createFolder(name: string): boolean {
+    const trimmed = name.trim();
+    if (!trimmed) return false;
+    const current = this.folders();
+    if (current.some((f) => f.toLowerCase() === trimmed.toLowerCase())) {
+      return false;
+    }
+    this._customFolders.update((folders) => [...folders, trimmed]);
+    return true;
+  }
+
+  /** Rename an existing folder across custom folders and documents */
+  renameFolder(oldName: string, newName: string): void {
+    const oldTrimmed = oldName.trim();
+    const newTrimmed = newName.trim();
+    if (!newTrimmed || oldTrimmed === newTrimmed) return;
+
+    this._customFolders.update((folders) =>
+      folders.map((f) => (f.toLowerCase() === oldTrimmed.toLowerCase() ? newTrimmed : f)),
+    );
+
+    this._documents.update((docs) =>
+      docs.map((d) => {
+        if (d.folder && d.folder.toLowerCase() === oldTrimmed.toLowerCase()) {
+          const newPath = d.path ? d.path.replace(new RegExp(`^${oldTrimmed}/`, 'i'), `${newTrimmed}/`) : undefined;
+          return { ...d, folder: newTrimmed, path: newPath, updatedAt: Date.now() };
+        }
+        return d;
+      }),
+    );
+  }
+
+  /** Delete a folder; optionally delete all documents inside it or unassign them to root */
+  deleteFolder(name: string, deleteDocuments: boolean = false): void {
+    const trimmed = name.trim().toLowerCase();
+    this._customFolders.update((folders) =>
+      folders.filter((f) => f.toLowerCase() !== trimmed),
+    );
+
+    if (deleteDocuments) {
+      this._documents.update((docs) =>
+        docs.filter((d) => !d.folder || d.folder.toLowerCase() !== trimmed),
+      );
+      if (this.activeDocument()?.folder?.toLowerCase() === trimmed) {
+        this._activeId.set(this._documents()[0]?.id ?? null);
+      }
+    } else {
+      this._documents.update((docs) =>
+        docs.map((d) =>
+          d.folder && d.folder.toLowerCase() === trimmed
+            ? { ...d, folder: undefined, updatedAt: Date.now() }
+            : d,
+        ),
+      );
+    }
+  }
+
+  /** Move a document to a specific folder (or null for root) */
+  moveToFolder(id: string, folder: string | null): void {
+    const trimmedFolder = folder?.trim() || undefined;
+    if (trimmedFolder) {
+      this.registerFolder(trimmedFolder);
+    }
+    this._documents.update((docs) =>
+      docs.map((d) =>
+        d.id === id ? { ...d, folder: trimmedFolder, updatedAt: Date.now() } : d,
+      ),
+    );
+  }
+
+  /** Get all documents within a specific folder */
+  getDocumentsInFolder(folder: string): MarkdownDocument[] {
+    const target = folder.trim().toLowerCase();
+    return this.sortedDocuments().filter(
+      (d) => d.folder && d.folder.toLowerCase() === target,
+    );
+  }
+
+  private registerFolder(folder: string): void {
+    const trimmed = folder.trim();
+    if (!trimmed) return;
+    if (!this._customFolders().some((f) => f.toLowerCase() === trimmed.toLowerCase())) {
+      this._customFolders.update((f) => [...f, trimmed]);
+    }
   }
 
   /** Update the active document's content */
@@ -98,9 +224,10 @@ export class DocumentStore {
 
   /** Update a document's title */
   updateTitle(id: string, title: string): void {
+    const trimmed = title.trim();
     this._documents.update((docs) =>
       docs.map((d) =>
-        d.id === id ? { ...d, title, updatedAt: Date.now() } : d,
+        d.id === id ? { ...d, title: trimmed || 'Untitled', updatedAt: Date.now() } : d,
       ),
     );
   }
@@ -139,7 +266,8 @@ export class DocumentStore {
       `${original.title} (Copy)`,
       original.content,
       original.parentId,
-      original.icon ?? '📄',
+      original.icon ?? 'document',
+      original.folder,
     );
     this._documents.update((docs) => [...docs, cloned]);
     this._activeId.set(cloned.id);
@@ -149,6 +277,11 @@ export class DocumentStore {
   /** Add multiple documents (for file import) */
   addDocuments(docs: MarkdownDocument[]): void {
     this._documents.update((existing) => [...existing, ...docs]);
+    for (const doc of docs) {
+      if (doc.folder) {
+        this.registerFolder(doc.folder);
+      }
+    }
     if (docs.length > 0) {
       this._activeId.set(docs[0].id);
     }
@@ -161,29 +294,37 @@ export class DocumentStore {
     // Remove query params or anchors if passed
     const target = clean.split('#')[0].split('?')[0].replace(/^\.?\//, '');
     const withoutExt = target.replace(/\.(md|markdown|txt|html)$/i, '');
-    const normalize = (s: string) => s.toLowerCase().replace(/[-_\s.]+/g, '');
+    const normalize = (s: string) => s.toLowerCase().replace(/[-_\s./\\]+/g, '');
 
     const normalizedTarget = normalize(target);
     const normalizedWithoutExt = normalize(withoutExt);
 
     const docs = this._documents();
 
-    // 1. Direct path or title match
-    const directMatch = docs.find(
-      (d) =>
+    // 1. Direct path, folder/title or title match
+    const directMatch = docs.find((d) => {
+      const fullPath = d.folder ? `${d.folder}/${d.title}` : d.title;
+      return (
         (d.path && (d.path === target || d.path.endsWith('/' + target) || d.path.endsWith('\\' + target))) ||
         d.title.toLowerCase() === target.toLowerCase() ||
-        d.title.toLowerCase() === withoutExt.toLowerCase(),
-    );
+        d.title.toLowerCase() === withoutExt.toLowerCase() ||
+        fullPath.toLowerCase() === target.toLowerCase() ||
+        fullPath.toLowerCase() === withoutExt.toLowerCase()
+      );
+    });
     if (directMatch) return directMatch;
 
-    // 2. Normalized match (ignores dashes, underscores, spaces)
+    // 2. Normalized match (ignores dashes, underscores, spaces, slashes)
     const normalizedMatch = docs.find((d) => {
       const docTitleNorm = normalize(d.title);
       const docPathNorm = d.path ? normalize(d.path) : '';
+      const docFolderNorm = d.folder ? normalize(d.folder) : '';
+      const fullNorm = docFolderNorm ? `${docFolderNorm}${docTitleNorm}` : docTitleNorm;
       return (
         docTitleNorm === normalizedWithoutExt ||
         docTitleNorm === normalizedTarget ||
+        fullNorm === normalizedWithoutExt ||
+        fullNorm === normalizedTarget ||
         (docPathNorm && (docPathNorm === normalizedTarget || docPathNorm.endsWith(normalizedTarget)))
       );
     });
@@ -201,6 +342,16 @@ export class DocumentStore {
     if (!this.isBrowser) return [];
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  private loadFolders(): string[] {
+    if (!this.isBrowser) return [];
+    try {
+      const raw = localStorage.getItem(FOLDERS_KEY);
       return raw ? JSON.parse(raw) : [];
     } catch {
       return [];

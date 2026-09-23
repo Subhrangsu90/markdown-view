@@ -117,6 +117,140 @@
   color: var(--text-tertiary);
 }
 
+/* Folder Selector Pill & Dropdown */
+.folder-selector-wrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.folder-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  background: var(--surface-inset);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text-secondary);
+  font-size: 11.5px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.folder-pill-btn:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+  border-color: var(--accent);
+}
+
+.folder-pill-btn svg {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.folder-pill-label {
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.folder-menu-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 190px;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-strong, var(--border));
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  padding: 6px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.folder-menu-header {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-tertiary);
+  padding: 4px 8px;
+}
+
+.folder-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 6px 8px;
+  background: transparent;
+  border: none;
+  border-radius: 5px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.folder-menu-item:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+.folder-menu-item.active {
+  background: var(--surface-active);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.new-folder-inline {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px;
+}
+
+.new-folder-inline input {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 8px;
+  background: var(--surface-inset);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-size: 11.5px;
+  font-family: inherit;
+  outline: none;
+}
+
+.new-folder-inline input:focus {
+  border-color: var(--accent);
+}
+
+.new-folder-inline .add-folder-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+}
+
 .top-bar-center {
   flex-shrink: 0;
 }

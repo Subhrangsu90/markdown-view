@@ -26,7 +26,8 @@ export class FileImportService {
     if ('showDirectoryPicker' in window) {
       try {
         const dirHandle = await (window as any).showDirectoryPicker();
-        const docs = await this.readDirectoryHandle(dirHandle);
+        const rootName = dirHandle.name || 'Imported Folder';
+        const docs = await this.readDirectoryHandle(dirHandle, '', rootName);
         this.store.addDocuments(docs);
         return;
       } catch (e: any) {
@@ -44,7 +45,7 @@ export class FileImportService {
 
   /** Process dropped files from drag and drop */
   async processDroppedItems(dataTransfer: DataTransfer): Promise<void> {
-    const files: File[] = [];
+    const fileEntries: { file: File; relativePath: string }[] = [];
 
     // Try to get FileSystemEntry for folder support
     if (dataTransfer.items) {
@@ -52,12 +53,12 @@ export class FileImportService {
         const item = dataTransfer.items[i];
         const entry = item.webkitGetAsEntry?.();
         if (entry) {
-          const entryFiles = await this.readEntry(entry);
-          files.push(...entryFiles);
+          const entries = await this.readEntry(entry);
+          fileEntries.push(...entries);
         } else if (item.kind === 'file') {
           const file = item.getAsFile();
           if (file && this.isMarkdownFile(file.name)) {
-            files.push(file);
+            fileEntries.push({ file, relativePath: file.name });
           }
         }
       }
@@ -65,23 +66,35 @@ export class FileImportService {
       for (let i = 0; i < dataTransfer.files.length; i++) {
         const file = dataTransfer.files[i];
         if (this.isMarkdownFile(file.name)) {
-          files.push(file);
+          fileEntries.push({ file, relativePath: file.name });
         }
       }
     }
 
-    if (files.length > 0) {
-      const docs = await this.readFilesAsDocuments(files);
+    if (fileEntries.length > 0) {
+      const docs: MarkdownDocument[] = [];
+      for (const item of fileEntries) {
+        const content = await this.readFileContent(item.file);
+        const title = this.fileNameToTitle(item.file.name);
+        let folder: string | undefined = undefined;
+        if (item.relativePath.includes('/')) {
+          folder = item.relativePath.substring(0, item.relativePath.lastIndexOf('/'));
+        }
+        const doc = createDocument(title, content, null, 'document', folder);
+        doc.path = item.relativePath;
+        docs.push(doc);
+      }
       this.store.addDocuments(docs);
     }
   }
 
-  private async readEntry(entry: FileSystemEntry): Promise<File[]> {
+  private async readEntry(entry: FileSystemEntry, parentPath: string = ''): Promise<{ file: File; relativePath: string }[]> {
     if (entry.isFile) {
       return new Promise((resolve) => {
         (entry as FileSystemFileEntry).file((file) => {
           if (this.isMarkdownFile(file.name)) {
-            resolve([file]);
+            const relativePath = parentPath ? `${parentPath}/${file.name}` : file.name;
+            resolve([{ file, relativePath }]);
           } else {
             resolve([]);
           }
@@ -89,11 +102,12 @@ export class FileImportService {
       });
     } else if (entry.isDirectory) {
       const dirReader = (entry as FileSystemDirectoryEntry).createReader();
+      const currentDir = parentPath ? `${parentPath}/${entry.name}` : entry.name;
       return new Promise((resolve) => {
         dirReader.readEntries(async (entries) => {
-          const allFiles: File[] = [];
+          const allFiles: { file: File; relativePath: string }[] = [];
           for (const e of entries) {
-            const files = await this.readEntry(e);
+            const files = await this.readEntry(e, currentDir);
             allFiles.push(...files);
           }
           resolve(allFiles);
@@ -103,7 +117,11 @@ export class FileImportService {
     return [];
   }
 
-  private async readDirectoryHandle(dirHandle: any): Promise<MarkdownDocument[]> {
+  private async readDirectoryHandle(
+    dirHandle: any,
+    currentPath: string = '',
+    rootFolderName: string = '',
+  ): Promise<MarkdownDocument[]> {
     const docs: MarkdownDocument[] = [];
 
     for await (const entry of dirHandle.values()) {
@@ -111,11 +129,14 @@ export class FileImportService {
         const file: File = await entry.getFile();
         const content = await this.readFileContent(file);
         const title = this.fileNameToTitle(file.name);
-        const doc = createDocument(title, content);
-        doc.path = file.name;
+        const folder = currentPath ? `${rootFolderName}/${currentPath}` : rootFolderName;
+        const relativePath = currentPath ? `${folder}/${file.name}` : `${rootFolderName}/${file.name}`;
+        const doc = createDocument(title, content, null, 'document', folder);
+        doc.path = relativePath;
         docs.push(doc);
       } else if (entry.kind === 'directory') {
-        const subDocs = await this.readDirectoryHandle(entry);
+        const subPath = currentPath ? `${currentPath}/${entry.name}` : entry.name;
+        const subDocs = await this.readDirectoryHandle(entry, subPath, rootFolderName);
         docs.push(...subDocs);
       }
     }
@@ -154,8 +175,13 @@ export class FileImportService {
     for (const file of files) {
       const content = await this.readFileContent(file);
       const title = this.fileNameToTitle(file.name);
-      const doc = createDocument(title, content);
-      doc.path = (file as any).webkitRelativePath || file.name;
+      const relativePath: string = (file as any).webkitRelativePath || file.name;
+      let folder: string | undefined = undefined;
+      if (relativePath.includes('/')) {
+        folder = relativePath.substring(0, relativePath.lastIndexOf('/'));
+      }
+      const doc = createDocument(title, content, null, 'document', folder);
+      doc.path = relativePath;
       docs.push(doc);
     }
     return docs;
