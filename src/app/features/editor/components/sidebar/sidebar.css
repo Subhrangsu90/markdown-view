@@ -138,10 +138,6 @@
   box-shadow: 0 4px 12px var(--accent-dim);
 }
 
-.action-btn.primary:active {
-  transform: translateY(0);
-}
-
 .action-row {
   display: flex;
   gap: 6px;
@@ -159,6 +155,23 @@
   color: var(--text-primary);
 }
 
+/* Section divider */
+.section-divider {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px 4px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+}
+
+.section-divider svg {
+  color: #f59e0b;
+}
+
 /* Document List */
 .sidebar-list {
   flex: 1;
@@ -173,8 +186,7 @@
   align-items: center;
   gap: 8px;
   width: 100%;
-  padding: 8px;
-  border: none;
+  padding: 6px 8px;
   border-radius: 6px;
   background: transparent;
   color: var(--text-secondary);
@@ -183,6 +195,7 @@
   text-align: left;
   transition: all 0.15s ease;
   position: relative;
+  box-sizing: border-box;
 }
 
 .doc-item:hover {
@@ -207,11 +220,25 @@
   border-radius: 0 3px 3px 0;
 }
 
-.doc-icon {
-  flex-shrink: 0;
+.doc-icon-btn {
   display: flex;
   align-items: center;
-  color: var(--text-tertiary);
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  font-size: 13px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 4px;
+  flex-shrink: 0;
+  padding: 0;
+  transition: transform 0.12s ease;
+}
+
+.doc-icon-btn:hover {
+  transform: scale(1.15);
+  background: var(--surface-hover);
 }
 
 .doc-info {
@@ -219,7 +246,7 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
 }
 
 .doc-title {
@@ -231,12 +258,24 @@
 }
 
 .doc-date {
-  font-size: 11px;
+  font-size: 10.5px;
   color: var(--text-tertiary);
 }
 
-.doc-delete {
+/* Item Action Buttons */
+.doc-actions {
   display: none;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.doc-item:hover .doc-actions {
+  display: flex;
+}
+
+.doc-action-btn {
+  display: flex;
   align-items: center;
   justify-content: center;
   width: 22px;
@@ -247,15 +286,24 @@
   background: transparent;
   color: var(--text-tertiary);
   cursor: pointer;
-  flex-shrink: 0;
-  transition: all 0.15s ease;
+  transition: all 0.12s ease;
 }
 
-.doc-item:hover .doc-delete {
+.doc-action-btn:hover {
+  background: var(--surface-active);
+  color: var(--text-primary);
+}
+
+.doc-action-btn.star-btn:hover {
+  color: #f59e0b;
+}
+
+.doc-action-btn.starred {
   display: flex;
+  color: #f59e0b;
 }
 
-.doc-delete:hover {
+.doc-action-btn.delete-btn:hover {
   background: rgba(239, 68, 68, 0.15);
   color: #ef4444;
 }

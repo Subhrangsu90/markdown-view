@@ -111,7 +111,9 @@ export class FileImportService {
         const file: File = await entry.getFile();
         const content = await this.readFileContent(file);
         const title = this.fileNameToTitle(file.name);
-        docs.push(createDocument(title, content));
+        const doc = createDocument(title, content);
+        doc.path = file.name;
+        docs.push(doc);
       } else if (entry.kind === 'directory') {
         const subDocs = await this.readDirectoryHandle(entry);
         docs.push(...subDocs);
@@ -152,7 +154,9 @@ export class FileImportService {
     for (const file of files) {
       const content = await this.readFileContent(file);
       const title = this.fileNameToTitle(file.name);
-      docs.push(createDocument(title, content));
+      const doc = createDocument(title, content);
+      doc.path = (file as any).webkitRelativePath || file.name;
+      docs.push(doc);
     }
     return docs;
   }

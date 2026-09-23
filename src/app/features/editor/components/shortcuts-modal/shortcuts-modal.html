@@ -1,0 +1,84 @@
+<div class="modal-backdrop" (click)="close.emit()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="modal-header">
+      <div class="modal-title-row">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        <h3>Keyboard Shortcuts & Cheatsheet</h3>
+      </div>
+      <button class="modal-close-btn" (click)="close.emit()" title="Close (Esc)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Content -->
+    <div class="modal-body">
+      <!-- Section 1: Navigation & Modes -->
+      <div class="shortcuts-section">
+        <h4>Editor Navigation</h4>
+        <div class="shortcut-grid">
+          <div class="shortcut-item">
+            <span class="shortcut-label">Edit Mode</span>
+            <div class="kbd-group"><kbd>Ctrl</kbd> + <kbd>E</kbd></div>
+          </div>
+          <div class="shortcut-item">
+            <span class="shortcut-label">Preview Mode</span>
+            <div class="kbd-group"><kbd>Ctrl</kbd> + <kbd>P</kbd></div>
+          </div>
+          <div class="shortcut-item">
+            <span class="shortcut-label">Split View</span>
+            <div class="kbd-group"><kbd>Ctrl</kbd> + <kbd>\</kbd></div>
+          </div>
+          <div class="shortcut-item">
+            <span class="shortcut-label">Toggle Sidebar</span>
+            <div class="kbd-group"><kbd>Ctrl</kbd> + <kbd>B</kbd></div>
+          </div>
+          <div class="shortcut-item">
+            <span class="shortcut-label">Toggle Outline (TOC)</span>
+            <div class="kbd-group"><kbd>Ctrl</kbd> + <kbd>O</kbd></div>
+          </div>
+          <div class="shortcut-item">
+            <span class="shortcut-label">Find & Replace</span>
+            <div class="kbd-group"><kbd>Ctrl</kbd> + <kbd>F</kbd></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: Notion Slash Commands -->
+      <div class="shortcuts-section">
+        <h4>Notion Slash Commands</h4>
+        <p class="section-desc">Type <kbd>/</kbd> on any line to open quick-insert menu:</p>
+        <div class="syntax-list">
+          <div class="syntax-row"><code>/h1</code>, <code>/h2</code>, <code>/h3</code> <span>Heading blocks</span></div>
+          <div class="syntax-row"><code>/todo</code> <span>Interactive task item with checkbox</span></div>
+          <div class="syntax-row"><code>/code</code> <span>Syntax highlighted code block</span></div>
+          <div class="syntax-row"><code>/table</code> <span>Pre-structured Markdown table</span></div>
+          <div class="syntax-row"><code>/math</code> <span>KaTeX LaTeX equation block</span></div>
+          <div class="syntax-row"><code>/mermaid</code> <span>Mermaid flowcharts & sequence diagrams</span></div>
+          <div class="syntax-row"><code>/callout</code> <span>Notion-style highlight callouts</span></div>
+        </div>
+      </div>
+
+      <!-- Section 3: Markdown Syntax -->
+      <div class="shortcuts-section">
+        <h4>Markdown Syntax</h4>
+        <div class="syntax-list">
+          <div class="syntax-row"><code>**bold**</code> <span>Bold text</span></div>
+          <div class="syntax-row"><code>*italic*</code> <span>Italic text</span></div>
+          <div class="syntax-row"><code>~~strike~~</code> <span>Strikethrough</span></div>
+          <div class="syntax-row"><code>`code`</code> <span>Inline monospace code</span></div>
+          <div class="syntax-row"><code>> quote</code> <span>Blockquote citation</span></div>
+          <div class="syntax-row"><code>- [ ] task</code> <span>Task list item</span></div>
+          <div class="syntax-row"><code>> [!NOTE]</code> <span>Note / Tip / Warning callout</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

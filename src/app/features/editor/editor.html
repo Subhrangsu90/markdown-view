@@ -29,7 +29,13 @@
 
         @if (store.activeDocument(); as doc) {
           <div class="doc-header-info">
-            <span class="doc-emoji" title="Page icon">📄</span>
+            <button
+              class="doc-emoji-btn"
+              (click)="cycleHeaderIcon(doc.id, doc.icon)"
+              title="Click to change page icon"
+            >
+              <span>{{ doc.icon || '📄' }}</span>
+            </button>
             <input
               class="title-input"
               [value]="doc.title"
@@ -86,12 +92,54 @@
       </div>
 
       <div class="top-bar-right">
+        <!-- Find & Replace trigger -->
+        <button
+          class="icon-btn action-tool-btn"
+          [class.active]="isFindOpen()"
+          (click)="toggleFind()"
+          title="Find & Replace (Ctrl+F)"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+        </button>
+
+        <!-- Document Outline (TOC) trigger -->
+        <button
+          class="icon-btn action-tool-btn"
+          [class.active]="isTocOpen()"
+          (click)="toggleToc()"
+          title="Document Outline (Ctrl+O)"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="8" y1="6" x2="21" y2="6"/>
+            <line x1="8" y1="12" x2="21" y2="12"/>
+            <line x1="8" y1="18" x2="21" y2="18"/>
+            <line x1="3" y1="6" x2="3.01" y2="6"/>
+            <line x1="3" y1="12" x2="3.01" y2="12"/>
+            <line x1="3" y1="18" x2="3.01" y2="18"/>
+          </svg>
+        </button>
+
+        <!-- Help & Shortcuts trigger -->
+        <button
+          class="icon-btn action-tool-btn"
+          (click)="toggleShortcuts()"
+          title="Keyboard Shortcuts & Help (Ctrl+/)"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </button>
+
         <!-- Theme Switcher from md-core library -->
         <md-theme-toggle />
 
         <!-- Quick stats pill -->
         @if (store.activeDocument()) {
-          <div class="stats-badge" title="Word count">
+          <div class="stats-badge hide-on-mobile" title="Word count">
             <span>{{ docStats().words }} words</span>
           </div>
 
@@ -126,6 +174,14 @@
                   </svg>
                   <span>Download Standalone HTML</span>
                 </button>
+                <button class="export-item" (click)="exportPdf()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="6 9 6 2 18 2 18 9"/>
+                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+                    <rect x="6" y="14" width="12" height="8"/>
+                  </svg>
+                  <span>Print to PDF</span>
+                </button>
                 <div class="menu-divider"></div>
                 <button class="export-item" (click)="copyMarkdown()">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -146,42 +202,98 @@
       <md-toolbar (formatAction)="onToolbarAction($event)" />
     }
 
-    <!-- Editor Content Area -->
-    <div class="editor-content">
-      @if (store.activeDocument(); as doc) {
-        @switch (viewMode()) {
-          @case ('edit') {
-            <app-markdown-input
-              [content]="doc.content"
-              [toolbarAction]="toolbarAction()"
-              (contentChange)="onContentChange($event)"
-            />
-          }
-          @case ('preview') {
-            <md-markdown-preview [content]="doc.content" />
-          }
-          @case ('split') {
-            <md-split-view>
+    <!-- Editor Workspace (Content + Floating Panels + Outline) -->
+    <div class="workspace-wrapper">
+      <!-- Find & Replace Bar -->
+      @if (isFindOpen()) {
+        <app-find-replace
+          [totalMatches]="findMatches().length"
+          [currentMatch]="currentMatchIndex()"
+          (searchChange)="onSearchChange($event)"
+          (findNext)="onFindNext()"
+          (findPrevious)="onFindPrevious()"
+          (replace)="onReplace($event)"
+          (replaceAll)="onReplaceAll($event)"
+          (close)="toggleFind()"
+        />
+      }
+
+      <!-- Slash Commands Palette -->
+      @if (slashState().active) {
+        <app-slash-menu
+          [query]="slashState().query"
+          [position]="slashState().position"
+          (selectCommand)="onSlashCommandSelect($event)"
+          (closeMenu)="slashState.set({ active: false, query: '', position: { top: 0, left: 0 } })"
+        />
+      }
+
+      <!-- Editor Content Area -->
+      <div class="editor-content">
+        @if (store.activeDocument(); as doc) {
+          @switch (viewMode()) {
+            @case ('edit') {
               <app-markdown-input
-                left
                 [content]="doc.content"
                 [toolbarAction]="toolbarAction()"
                 (contentChange)="onContentChange($event)"
-                (scrollEvent)="onEditorScroll($event)"
+                (slashTrigger)="onSlashTrigger($event)"
               />
+            }
+            @case ('preview') {
               <md-markdown-preview
-                right
                 [content]="doc.content"
-                (scrollEvent)="onPreviewScroll($event)"
+                (contentChange)="onContentChange($event)"
+                (documentNavigate)="onDocumentNavigate($event)"
               />
-            </md-split-view>
+            }
+            @case ('split') {
+              <md-split-view>
+                <app-markdown-input
+                  left
+                  [content]="doc.content"
+                  [toolbarAction]="toolbarAction()"
+                  (contentChange)="onContentChange($event)"
+                  (scrollEvent)="onEditorScroll($event)"
+                  (slashTrigger)="onSlashTrigger($event)"
+                />
+                <md-markdown-preview
+                  right
+                  [content]="doc.content"
+                  (scrollEvent)="onPreviewScroll($event)"
+                  (contentChange)="onContentChange($event)"
+                  (documentNavigate)="onDocumentNavigate($event)"
+                />
+              </md-split-view>
+            }
           }
+        } @else {
+          <div class="empty-state">
+            <div class="empty-icon">📝</div>
+            <h2>No document selected</h2>
+            <p>Create a new document or import markdown files to get started.</p>
+          </div>
         }
-      } @else {
-        <div class="empty-state">
-          <div class="empty-icon">📝</div>
-          <h2>No document selected</h2>
-          <p>Create a new document or import markdown files to get started.</p>
+      </div>
+
+      <!-- Table of Contents Slide-out Drawer -->
+      @if (isTocOpen() && store.activeDocument()) {
+        <div class="toc-drawer">
+          <div class="toc-drawer-header">
+            <span>Document Outline</span>
+            <button class="icon-btn" (click)="toggleToc()" title="Close Outline">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+          <div class="toc-drawer-body">
+            <md-table-of-contents
+              [content]="store.activeDocument()?.content ?? ''"
+              (headingClick)="onHeadingSelect($event)"
+            />
+          </div>
         </div>
       }
     </div>
@@ -216,6 +328,11 @@
       </svg>
       <span>{{ copySuccessMessage() }}</span>
     </div>
+  }
+
+  <!-- Shortcuts & Help Modal -->
+  @if (isShortcutsOpen()) {
+    <app-shortcuts-modal (close)="toggleShortcuts()" />
   }
 
   <!-- Drag overlay -->

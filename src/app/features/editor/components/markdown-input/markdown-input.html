@@ -1,4 +1,12 @@
 <div class="input-container">
+  <!-- Line Numbers Gutter -->
+  <div class="line-gutter" #gutter aria-hidden="true">
+    @for (line of lines(); track line) {
+      <div class="gutter-number">{{ line }}</div>
+    }
+  </div>
+
+  <!-- Textarea Area -->
   <textarea
     #textarea
     class="markdown-textarea"
@@ -6,7 +14,7 @@
     (input)="onInput($event)"
     (scroll)="onScroll($event)"
     (keydown)="onKeyDown($event)"
-    placeholder="Start writing markdown..."
+    placeholder="Start writing markdown, or type / for commands..."
     spellcheck="false"
     autocomplete="off"
     autocorrect="off"

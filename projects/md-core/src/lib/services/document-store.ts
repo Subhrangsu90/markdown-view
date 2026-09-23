@@ -31,6 +31,16 @@ export class DocumentStore {
     [...this._documents()].sort((a, b) => b.updatedAt - a.updatedAt),
   );
 
+  /** Derived: favorite / pinned documents */
+  readonly favoriteDocuments = computed(() =>
+    this.sortedDocuments().filter((d) => !!d.isFavorite),
+  );
+
+  /** Derived: non-favorite documents */
+  readonly regularDocuments = computed(() =>
+    this.sortedDocuments().filter((d) => !d.isFavorite),
+  );
+
   constructor() {
     // Auto-persist to localStorage
     effect(() => {
@@ -103,12 +113,88 @@ export class DocumentStore {
     }
   }
 
+  /** Toggle a document's favorite status */
+  toggleFavorite(id: string): void {
+    this._documents.update((docs) =>
+      docs.map((d) =>
+        d.id === id ? { ...d, isFavorite: !d.isFavorite, updatedAt: Date.now() } : d,
+      ),
+    );
+  }
+
+  /** Update a document's icon/emoji */
+  updateIcon(id: string, icon: string): void {
+    this._documents.update((docs) =>
+      docs.map((d) =>
+        d.id === id ? { ...d, icon, updatedAt: Date.now() } : d,
+      ),
+    );
+  }
+
+  /** Duplicate a document and select the clone */
+  duplicate(id: string): MarkdownDocument | null {
+    const original = this._documents().find((d) => d.id === id);
+    if (!original) return null;
+    const cloned = createDocument(
+      `${original.title} (Copy)`,
+      original.content,
+      original.parentId,
+      original.icon ?? '📄',
+    );
+    this._documents.update((docs) => [...docs, cloned]);
+    this._activeId.set(cloned.id);
+    return cloned;
+  }
+
   /** Add multiple documents (for file import) */
   addDocuments(docs: MarkdownDocument[]): void {
     this._documents.update((existing) => [...existing, ...docs]);
     if (docs.length > 0) {
       this._activeId.set(docs[0].id);
     }
+  }
+
+  /** Find a document by path, filename, or title (fuzzy match) */
+  findByPathOrTitle(query: string): MarkdownDocument | null {
+    if (!query) return null;
+    const clean = decodeURIComponent(query).trim();
+    // Remove query params or anchors if passed
+    const target = clean.split('#')[0].split('?')[0].replace(/^\.?\//, '');
+    const withoutExt = target.replace(/\.(md|markdown|txt|html)$/i, '');
+    const normalize = (s: string) => s.toLowerCase().replace(/[-_\s.]+/g, '');
+
+    const normalizedTarget = normalize(target);
+    const normalizedWithoutExt = normalize(withoutExt);
+
+    const docs = this._documents();
+
+    // 1. Direct path or title match
+    const directMatch = docs.find(
+      (d) =>
+        (d.path && (d.path === target || d.path.endsWith('/' + target) || d.path.endsWith('\\' + target))) ||
+        d.title.toLowerCase() === target.toLowerCase() ||
+        d.title.toLowerCase() === withoutExt.toLowerCase(),
+    );
+    if (directMatch) return directMatch;
+
+    // 2. Normalized match (ignores dashes, underscores, spaces)
+    const normalizedMatch = docs.find((d) => {
+      const docTitleNorm = normalize(d.title);
+      const docPathNorm = d.path ? normalize(d.path) : '';
+      return (
+        docTitleNorm === normalizedWithoutExt ||
+        docTitleNorm === normalizedTarget ||
+        (docPathNorm && (docPathNorm === normalizedTarget || docPathNorm.endsWith(normalizedTarget)))
+      );
+    });
+    if (normalizedMatch) return normalizedMatch;
+
+    // 3. Substring / partial match
+    const partialMatch = docs.find((d) => {
+      const docTitleNorm = normalize(d.title);
+      return docTitleNorm.includes(normalizedWithoutExt) || normalizedWithoutExt.includes(docTitleNorm);
+    });
+    return partialMatch ?? null;
   }
 
   private loadDocuments(): MarkdownDocument[] {

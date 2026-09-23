@@ -1,0 +1,31 @@
+<div
+  class="slash-menu-popup"
+  [style.top.px]="position().top"
+  [style.left.px]="position().left"
+>
+  <div class="slash-menu-header">
+    <span class="slash-header-title">Insert Block</span>
+    <span class="slash-shortcut-hint">↑↓ to navigate • ↵ to select</span>
+  </div>
+
+  <div class="slash-menu-list">
+    @for (cmd of filteredCommands(); track cmd.id; let idx = $index) {
+      <button
+        class="slash-item"
+        [class.selected]="selectedIndex() === idx"
+        (click)="onSelect(cmd)"
+        (mouseenter)="selectedIndex.set(idx)"
+      >
+        <span class="slash-icon">{{ cmd.icon }}</span>
+        <div class="slash-item-content">
+          <span class="slash-item-title">{{ cmd.title }}</span>
+          <span class="slash-item-desc">{{ cmd.description }}</span>
+        </div>
+      </button>
+    } @empty {
+      <div class="slash-empty">
+        <span>No matching commands</span>
+      </div>
+    }
+  </div>
+</div>

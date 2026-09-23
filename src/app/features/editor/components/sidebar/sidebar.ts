@@ -4,13 +4,17 @@ import {
   input,
   output,
   signal,
+  computed,
   PLATFORM_ID,
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { DocumentStore, FileImportService, TimeAgo } from 'md-core';
 
+const EMOJI_PALETTE = ['📄', '📝', '🚀', '💡', '⚡', '📊', '📚', '🎯', '✨', '🔥', '💻', '🎨', '📌', '🛠️'];
+
 @Component({
   selector: 'app-sidebar',
+  standalone: true,
   imports: [TimeAgo],
   templateUrl: './sidebar.html',
   styleUrl: './sidebar.css',
@@ -29,16 +33,27 @@ export class Sidebar {
 
   protected readonly searchQuery = signal('');
 
-  protected get filteredDocuments() {
-    const query = this.searchQuery().toLowerCase();
-    const docs = this.store.sortedDocuments();
-    if (!query) return docs;
-    return docs.filter(
+  protected readonly filteredFavoriteDocuments = computed(() => {
+    const q = this.searchQuery().toLowerCase().trim();
+    const favs = this.store.favoriteDocuments();
+    if (!q) return favs;
+    return favs.filter(
       (d) =>
-        d.title.toLowerCase().includes(query) ||
-        d.content.toLowerCase().includes(query),
+        d.title.toLowerCase().includes(q) ||
+        d.content.toLowerCase().includes(q),
     );
-  }
+  });
+
+  protected readonly filteredRegularDocuments = computed(() => {
+    const q = this.searchQuery().toLowerCase().trim();
+    const regulars = this.store.regularDocuments();
+    if (!q) return regulars;
+    return regulars.filter(
+      (d) =>
+        d.title.toLowerCase().includes(q) ||
+        d.content.toLowerCase().includes(q),
+    );
+  });
 
   protected createDocument(): void {
     this.store.create();
@@ -57,6 +72,23 @@ export class Sidebar {
   protected deleteDocument(event: Event, id: string): void {
     event.stopPropagation();
     this.store.delete(id);
+  }
+
+  protected toggleFavorite(event: Event, id: string): void {
+    event.stopPropagation();
+    this.store.toggleFavorite(id);
+  }
+
+  protected duplicateDocument(event: Event, id: string): void {
+    event.stopPropagation();
+    this.store.duplicate(id);
+  }
+
+  protected cycleIcon(event: Event, id: string, currentIcon: string = '📄'): void {
+    event.stopPropagation();
+    const currentIndex = EMOJI_PALETTE.indexOf(currentIcon);
+    const nextIndex = (currentIndex + 1) % EMOJI_PALETTE.length;
+    this.store.updateIcon(id, EMOJI_PALETTE[nextIndex]);
   }
 
   protected onSearch(event: Event): void {

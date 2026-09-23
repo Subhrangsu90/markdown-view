@@ -65,13 +65,26 @@
   max-width: 380px;
 }
 
-.doc-emoji {
+.doc-emoji-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
   font-size: 16px;
   line-height: 1;
-  user-select: none;
-  cursor: default;
-  opacity: 0.85;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
   flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.doc-emoji-btn:hover {
+  background: var(--surface-hover);
+  border-color: var(--border);
+  transform: scale(1.1);
 }
 
 .title-input {
@@ -113,7 +126,17 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 8px;
+  gap: 6px;
+}
+
+.action-tool-btn {
+  border: 1px solid transparent;
+}
+
+.action-tool-btn.active {
+  background: var(--surface-active);
+  color: var(--accent);
+  border-color: var(--accent-dim);
 }
 
 /* Stats Badge */
@@ -267,11 +290,63 @@
   flex-shrink: 0;
 }
 
+/* Workspace Wrapper (Editor + Panels + TOC Drawer) */
+.workspace-wrapper {
+  position: relative;
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  overflow: hidden;
+}
+
 /* Editor Content */
 .editor-content {
   flex: 1;
   min-height: 0;
   overflow: hidden;
+  position: relative;
+}
+
+/* Table of Contents Slide-out Drawer */
+.toc-drawer {
+  width: 270px;
+  height: 100%;
+  border-left: 1px solid var(--border);
+  background: var(--surface-card);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  animation: tocSlideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 40;
+}
+
+@keyframes tocSlideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.toc-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+
+.toc-drawer-body {
+  flex: 1;
+  overflow-y: auto;
 }
 
 /* Status Bar / Footer */
@@ -410,6 +485,32 @@
   }
 }
 
+/* ===== Print to PDF Styles ===== */
+@media print {
+  .sidebar,
+  .top-bar,
+  md-toolbar,
+  .editor-status-bar,
+  .toc-drawer,
+  app-find-replace,
+  app-slash-menu,
+  app-shortcuts-modal,
+  .toast-notification,
+  .drag-overlay {
+    display: none !important;
+  }
+
+  .editor-shell,
+  .main-area,
+  .workspace-wrapper,
+  .editor-content {
+    height: auto !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+}
+
 /* ===== Responsive Mobile Breakpoints ===== */
 @media (max-width: 768px) {
   .top-bar {
@@ -419,17 +520,13 @@
   }
 
   .top-bar-right {
-    gap: 5px;
+    gap: 4px;
   }
 
   .title-input {
-    max-width: 140px;
-    font-size: 13.5px;
+    max-width: 130px;
+    font-size: 13px;
     padding: 3px 6px;
-  }
-
-  .doc-emoji {
-    font-size: 15px;
   }
 
   .stats-badge {
@@ -447,8 +544,17 @@
   }
 
   .mode-btn {
-    padding: 4px 9px;
-    font-size: 11.5px;
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+
+  .toc-drawer {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 250px;
+    box-shadow: -8px 0 24px rgba(0, 0, 0, 0.4);
   }
 
   .editor-status-bar {
@@ -479,7 +585,7 @@
   }
 
   .title-input {
-    max-width: 110px;
-    font-size: 13px;
+    max-width: 100px;
+    font-size: 12.5px;
   }
 }

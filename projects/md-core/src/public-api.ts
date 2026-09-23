@@ -16,6 +16,7 @@ export * from './lib/components/toolbar/toolbar';
 export * from './lib/components/markdown-preview/markdown-preview';
 export * from './lib/components/split-view/split-view';
 export * from './lib/components/theme-toggle/theme-toggle';
+export * from './lib/components/table-of-contents/table-of-contents';
 
 // Pipes
 export * from './lib/pipes/time-ago';

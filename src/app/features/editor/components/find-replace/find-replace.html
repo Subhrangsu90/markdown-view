@@ -1,0 +1,81 @@
+<div class="find-replace-bar" (keydown)="onKeyDown($event)">
+  <!-- Search Row -->
+  <div class="find-row">
+    <div class="input-with-actions">
+      <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input
+        type="text"
+        class="fr-input"
+        placeholder="Find in document..."
+        [value]="searchQuery()"
+        (input)="onSearchInput($event)"
+        autofocus
+      />
+      <button
+        class="fr-icon-btn toggle-case"
+        [class.active]="caseSensitive()"
+        (click)="toggleCaseSensitive()"
+        title="Match Case (Aa)"
+      >
+        <span>Aa</span>
+      </button>
+    </div>
+
+    <!-- Match counter -->
+    <div class="match-count">
+      @if (searchQuery()) {
+        <span>{{ totalMatches() > 0 ? (currentMatch() + 1) + ' of ' + totalMatches() : 'No matches' }}</span>
+      }
+    </div>
+
+    <!-- Stepper arrows -->
+    <div class="stepper-buttons">
+      <button class="fr-icon-btn" (click)="findPrevious.emit()" title="Previous match (Shift+Enter)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="18 15 12 9 6 15"/>
+        </svg>
+      </button>
+      <button class="fr-icon-btn" (click)="findNext.emit()" title="Next match (Enter)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Close button -->
+    <button class="fr-icon-btn close-btn" (click)="close.emit()" title="Close (Escape)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Replace Row -->
+  <div class="replace-row">
+    <div class="input-with-actions">
+      <svg class="replace-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+      </svg>
+      <input
+        type="text"
+        class="fr-input"
+        placeholder="Replace with..."
+        [value]="replaceQuery()"
+        (input)="replaceQuery.set($any($event.target).value)"
+      />
+    </div>
+
+    <div class="replace-actions">
+      <button class="fr-btn" (click)="onReplace()" [disabled]="!searchQuery() || totalMatches() === 0">
+        Replace
+      </button>
+      <button class="fr-btn" (click)="onReplaceAll()" [disabled]="!searchQuery() || totalMatches() === 0">
+        Replace All
+      </button>
+    </div>
+  </div>
+</div>

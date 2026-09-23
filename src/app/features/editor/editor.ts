@@ -16,15 +16,34 @@ import {
   MarkdownPreview,
   SplitView,
   ThemeToggle,
+  TableOfContents,
+  TocHeading,
 } from 'md-core';
 import { Sidebar } from './components/sidebar/sidebar';
-import { MarkdownInput } from './components/markdown-input/markdown-input';
+import { MarkdownInput, SlashTriggerEvent } from './components/markdown-input/markdown-input';
+import { SlashMenu, SlashCommand } from './components/slash-menu/slash-menu';
+import { FindReplace } from './components/find-replace/find-replace';
+import { ShortcutsModal } from './components/shortcuts-modal/shortcuts-modal';
 
 export type ViewMode = 'edit' | 'preview' | 'split';
 
+const EMOJI_PALETTE = ['📄', '📝', '🚀', '💡', '⚡', '📊', '📚', '🎯', '✨', '🔥', '💻', '🎨', '📌', '🛠️'];
+
 @Component({
   selector: 'app-editor',
-  imports: [Sidebar, MarkdownInput, Toolbar, MarkdownPreview, SplitView, ThemeToggle],
+  standalone: true,
+  imports: [
+    Sidebar,
+    MarkdownInput,
+    Toolbar,
+    MarkdownPreview,
+    SplitView,
+    ThemeToggle,
+    TableOfContents,
+    SlashMenu,
+    FindReplace,
+    ShortcutsModal,
+  ],
   templateUrl: './editor.html',
   styleUrl: './editor.css',
 })
@@ -42,8 +61,25 @@ export class Editor {
   protected readonly isExportMenuOpen = signal(false);
   protected readonly copySuccessMessage = signal<string | null>(null);
 
+  // Advanced features state
+  protected readonly isTocOpen = signal(false);
+  protected readonly isFindOpen = signal(false);
+  protected readonly isShortcutsOpen = signal(false);
+  protected readonly slashState = signal<SlashTriggerEvent>({
+    active: false,
+    query: '',
+    position: { top: 0, left: 0 },
+  });
+
+  // Find & Replace match tracking
+  protected readonly findMatches = signal<number[]>([]);
+  protected readonly currentMatchIndex = signal<number>(0);
+  private lastSearchQuery = '';
+  private lastCaseSensitive = false;
+
   protected readonly inputComponent = viewChild(MarkdownInput);
   protected readonly previewComponent = viewChild(MarkdownPreview);
+  protected readonly slashMenuComponent = viewChild(SlashMenu);
 
   private isSyncingScroll = false;
 
@@ -77,16 +113,134 @@ export class Editor {
     this.sidebarOpen.update((v) => !v);
   }
 
+  protected toggleToc(): void {
+    this.isTocOpen.update((v) => !v);
+  }
+
+  protected toggleFind(): void {
+    this.isFindOpen.update((v) => !v);
+    if (!this.isFindOpen()) {
+      this.findMatches.set([]);
+    }
+  }
+
+  protected toggleShortcuts(): void {
+    this.isShortcutsOpen.update((v) => !v);
+  }
+
   protected setViewMode(mode: ViewMode): void {
     this.viewMode.set(mode);
   }
 
   protected onContentChange(content: string): void {
     this.store.updateContent(content);
+    if (this.isFindOpen() && this.lastSearchQuery) {
+      this.performSearch(this.lastSearchQuery, this.lastCaseSensitive);
+    }
   }
 
   protected onToolbarAction(action: ToolbarAction): void {
     this.toolbarAction.set(action);
+  }
+
+  /** Heading clicked in Table of Contents */
+  protected onHeadingSelect(heading: TocHeading): void {
+    if (this.viewMode() === 'edit' || this.viewMode() === 'split') {
+      this.inputComponent()?.scrollToLine(heading.lineIndex);
+    }
+    if (this.viewMode() === 'preview' || this.viewMode() === 'split') {
+      this.previewComponent()?.scrollToHeading(heading.text);
+    }
+    if (this.isMobile()) {
+      this.isTocOpen.set(false);
+    }
+  }
+
+  /** Inter-document link clicked in preview */
+  protected onDocumentNavigate(event: { docId: string; title: string }): void {
+    this.notifyUser(`Navigated to "${event.title}"`);
+  }
+
+  /** Slash menu handling */
+  protected onSlashTrigger(event: SlashTriggerEvent): void {
+    this.slashState.set(event);
+  }
+
+  protected onSlashCommandSelect(cmd: SlashCommand): void {
+    this.inputComponent()?.insertSlashCommand(cmd.snippet);
+    this.slashState.set({ active: false, query: '', position: { top: 0, left: 0 } });
+  }
+
+  /** Find & Replace handlers */
+  protected onSearchChange({ query, caseSensitive }: { query: string; caseSensitive: boolean }): void {
+    this.lastSearchQuery = query;
+    this.lastCaseSensitive = caseSensitive;
+    this.performSearch(query, caseSensitive);
+  }
+
+  private performSearch(query: string, caseSensitive: boolean): void {
+    if (!query) {
+      this.findMatches.set([]);
+      this.currentMatchIndex.set(0);
+      return;
+    }
+
+    const content = this.store.activeDocument()?.content ?? '';
+    const matches: number[] = [];
+    const flags = caseSensitive ? 'g' : 'gi';
+    const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(escaped, flags);
+
+    let match: RegExpExecArray | null;
+    while ((match = regex.exec(content)) !== null) {
+      matches.push(match.index);
+    }
+
+    this.findMatches.set(matches);
+    if (matches.length > 0) {
+      this.currentMatchIndex.set(0);
+      this.highlightCurrentMatch();
+    }
+  }
+
+  protected onFindNext(): void {
+    const total = this.findMatches().length;
+    if (total === 0) return;
+    this.currentMatchIndex.update((i) => (i + 1) % total);
+    this.highlightCurrentMatch();
+  }
+
+  protected onFindPrevious(): void {
+    const total = this.findMatches().length;
+    if (total === 0) return;
+    this.currentMatchIndex.update((i) => (i - 1 + total) % total);
+    this.highlightCurrentMatch();
+  }
+
+  private highlightCurrentMatch(): void {
+    const matches = this.findMatches();
+    const idx = this.currentMatchIndex();
+    if (matches.length === 0 || idx >= matches.length) return;
+    const start = matches[idx];
+    const end = start + this.lastSearchQuery.length;
+    this.inputComponent()?.selectMatch(start, end);
+  }
+
+  protected onReplace({ query, replacement }: { query: string; replacement: string }): void {
+    const matches = this.findMatches();
+    const idx = this.currentMatchIndex();
+    if (matches.length === 0 || idx >= matches.length) return;
+
+    const start = matches[idx];
+    const end = start + query.length;
+    this.inputComponent()?.replaceMatch(start, end, replacement);
+    this.performSearch(query, this.lastCaseSensitive);
+  }
+
+  protected onReplaceAll({ query, replacement }: { query: string; replacement: string }): void {
+    this.inputComponent()?.replaceAllMatches(query, replacement, this.lastCaseSensitive);
+    this.performSearch(query, this.lastCaseSensitive);
+    this.notifyUser('Replaced all occurrences!');
   }
 
   /** Synchronized scrolling */
@@ -116,6 +270,13 @@ export class Editor {
     requestAnimationFrame(() => {
       this.isSyncingScroll = false;
     });
+  }
+
+  /** Cycle document emoji icon */
+  protected cycleHeaderIcon(docId: string, currentIcon: string = '📄'): void {
+    const currentIndex = EMOJI_PALETTE.indexOf(currentIcon);
+    const nextIndex = (currentIndex + 1) % EMOJI_PALETTE.length;
+    this.store.updateIcon(docId, EMOJI_PALETTE[nextIndex]);
   }
 
   /** Export as Markdown file */
@@ -193,6 +354,13 @@ export class Editor {
     this.notifyUser('Exported as HTML!');
   }
 
+  /** Export to PDF via Browser Print */
+  protected exportPdf(): void {
+    if (!this.isBrowser) return;
+    this.isExportMenuOpen.set(false);
+    window.print();
+  }
+
   /** Copy Markdown to clipboard */
   protected copyMarkdown(): void {
     if (!this.isBrowser) return;
@@ -247,6 +415,12 @@ export class Editor {
   onKeyDown(event: KeyboardEvent): void {
     if (!this.isBrowser) return;
 
+    // If slash menu is active, forward keys
+    if (this.slashState().active && this.slashMenuComponent()) {
+      const handled = this.slashMenuComponent()?.handleKeyDown(event);
+      if (handled) return;
+    }
+
     if (event.ctrlKey || event.metaKey) {
       switch (event.key.toLowerCase()) {
         case 'e':
@@ -267,7 +441,22 @@ export class Editor {
           event.preventDefault();
           this.sidebarOpen.update((v) => !v);
           break;
+        case 'o':
+          event.preventDefault();
+          this.toggleToc();
+          break;
+        case 'f':
+          event.preventDefault();
+          this.toggleFind();
+          break;
+        case '/':
+          event.preventDefault();
+          this.toggleShortcuts();
+          break;
       }
+    } else if (event.key === '?' && !['INPUT', 'TEXTAREA'].includes((event.target as HTMLElement).tagName)) {
+      event.preventDefault();
+      this.toggleShortcuts();
     }
   }
 }

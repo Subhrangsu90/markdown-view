@@ -55,39 +55,139 @@
     </div>
   </div>
 
-  <!-- Document List -->
+  <!-- Document List Container -->
   <div class="sidebar-list">
-    @for (doc of filteredDocuments; track doc.id) {
-      <button
+    <!-- Pinned / Favorites Section -->
+    @if (filteredFavoriteDocuments().length > 0) {
+      <div class="section-divider">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+        </svg>
+        <span>Favorites</span>
+      </div>
+
+      @for (doc of filteredFavoriteDocuments(); track doc.id) {
+        <div
+          class="doc-item"
+          [class.active]="store.activeId() === doc.id"
+          (click)="selectDocument(doc.id)"
+        >
+          <button
+            class="doc-icon-btn"
+            (click)="cycleIcon($event, doc.id, doc.icon)"
+            title="Click to change icon"
+          >
+            <span>{{ doc.icon || '📄' }}</span>
+          </button>
+          <div class="doc-info">
+            <span class="doc-title">{{ doc.title || 'Untitled' }}</span>
+            <span class="doc-date">{{ doc.updatedAt | timeAgo }}</span>
+          </div>
+
+          <div class="doc-actions">
+            <!-- Favorite button -->
+            <button
+              class="doc-action-btn starred"
+              (click)="toggleFavorite($event, doc.id)"
+              title="Unpin favorite"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+              </svg>
+            </button>
+            <!-- Duplicate button -->
+            <button
+              class="doc-action-btn"
+              (click)="duplicateDocument($event, doc.id)"
+              title="Duplicate"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+            </button>
+            <!-- Delete button -->
+            <button
+              class="doc-action-btn delete-btn"
+              (click)="deleteDocument($event, doc.id)"
+              title="Delete"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      }
+    }
+
+    <!-- Regular Pages Section -->
+    @if (filteredFavoriteDocuments().length > 0 && filteredRegularDocuments().length > 0) {
+      <div class="section-divider">
+        <span>Pages</span>
+      </div>
+    }
+
+    @for (doc of filteredRegularDocuments(); track doc.id) {
+      <div
         class="doc-item"
         [class.active]="store.activeId() === doc.id"
         (click)="selectDocument(doc.id)"
       >
-        <div class="doc-icon">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-            <polyline points="14 2 14 8 20 8"/>
-            <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
-          </svg>
-        </div>
+        <button
+          class="doc-icon-btn"
+          (click)="cycleIcon($event, doc.id, doc.icon)"
+          title="Click to change icon"
+        >
+          <span>{{ doc.icon || '📄' }}</span>
+        </button>
         <div class="doc-info">
           <span class="doc-title">{{ doc.title || 'Untitled' }}</span>
           <span class="doc-date">{{ doc.updatedAt | timeAgo }}</span>
         </div>
-        <button
-          class="doc-delete"
-          (click)="deleteDocument($event, doc.id)"
-          title="Delete"
-        >
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-          </svg>
-        </button>
-      </button>
-    } @empty {
-      <div class="empty-list">
-        <p>No documents found</p>
+
+        <div class="doc-actions">
+          <!-- Favorite button -->
+          <button
+            class="doc-action-btn star-btn"
+            (click)="toggleFavorite($event, doc.id)"
+            title="Star favorite"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+          </button>
+          <!-- Duplicate button -->
+          <button
+            class="doc-action-btn"
+            (click)="duplicateDocument($event, doc.id)"
+            title="Duplicate"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+          </button>
+          <!-- Delete button -->
+          <button
+            class="doc-action-btn delete-btn"
+            (click)="deleteDocument($event, doc.id)"
+            title="Delete"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
       </div>
+    } @empty {
+      @if (filteredFavoriteDocuments().length === 0) {
+        <div class="empty-list">
+          <p>No documents found</p>
+        </div>
+      }
     }
   </div>
 

@@ -527,3 +527,41 @@
     gap: 8px;
   }
 }
+
+/* ===== Mermaid Diagrams ===== */
+:host ::ng-deep .mermaid-diagram-card {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px 16px;
+  margin: 1.6rem 0;
+  background: var(--surface-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow-x: auto;
+  box-shadow: var(--shadow-sm);
+}
+
+:host ::ng-deep .mermaid-diagram-card svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ===== KaTeX Math Formulas ===== */
+:host ::ng-deep .katex-block-wrapper {
+  display: flex;
+  justify-content: center;
+  padding: 18px 16px;
+  margin: 1.4rem 0;
+  background: var(--surface-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow-x: auto;
+  font-size: 1.15em;
+}
+
+:host ::ng-deep .katex {
+  font-size: 1.1em;
+  text-rendering: auto;
+}
+
