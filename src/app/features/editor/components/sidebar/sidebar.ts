@@ -34,6 +34,7 @@ export interface FolderGroup {
   styleUrl: './sidebar.css',
   host: {
     '[class.open]': 'isOpen()',
+    '(window:keydown.escape)': 'onEscape()',
   },
 })
 export class Sidebar {
@@ -48,12 +49,25 @@ export class Sidebar {
 
   protected readonly searchQuery = signal('');
 
+  // Multi-selection state
+  protected readonly selectedDocIds = signal<Set<string>>(new Set());
+  protected readonly lastSelectedId = signal<string | null>(null);
+  protected readonly isBatchMoveOpen = signal<boolean>(false);
+
   // Folder UI state
   protected readonly collapsedFolders = signal<Set<string>>(new Set());
   protected readonly isCreatingFolder = signal(false);
   protected readonly newFolderName = signal('');
   protected readonly editingFolder = signal<string | null>(null);
   protected readonly renameFolderName = signal('');
+
+  // Drag and Drop state
+  protected readonly draggingDocId = signal<string | null>(null);
+  protected readonly draggingFolder = signal<string | null>(null);
+  protected readonly dragOverFolder = signal<string | null>(null);
+  protected readonly dragOverDocId = signal<string | null>(null);
+  protected readonly dragOverPosition = signal<'before' | 'after' | null>(null);
+  protected readonly dragOverRoot = signal<boolean>(false);
 
   protected readonly filteredFavoriteDocuments = computed(() => {
     const q = this.searchQuery().toLowerCase().trim();
@@ -69,7 +83,7 @@ export class Sidebar {
   protected readonly folderGroups = computed<FolderGroup[]>(() => {
     const q = this.searchQuery().toLowerCase().trim();
     const allFolders = this.store.folders();
-    const docs = this.store.documents();
+    const docs = this.store.sortedDocuments();
 
     return allFolders
       .map((folderName) => {
@@ -103,6 +117,136 @@ export class Sidebar {
         d.content.toLowerCase().includes(q),
     );
   });
+
+  protected readonly allVisibleDocIds = computed<string[]>(() => {
+    const ids: string[] = [];
+    // Favorites
+    for (const d of this.filteredFavoriteDocuments()) {
+      if (!ids.includes(d.id)) ids.push(d.id);
+    }
+    // Folders (if not collapsed)
+    for (const group of this.folderGroups()) {
+      if (!this.isFolderCollapsed(group.name)) {
+        for (const d of group.documents) {
+          if (!ids.includes(d.id)) ids.push(d.id);
+        }
+      }
+    }
+    // Root pages
+    for (const d of this.filteredUncategorizedDocuments()) {
+      if (!ids.includes(d.id)) ids.push(d.id);
+    }
+    return ids;
+  });
+
+  protected onEscape(): void {
+    if (this.isBatchMoveOpen()) {
+      this.isBatchMoveOpen.set(false);
+      return;
+    }
+    if (this.selectedDocIds().size > 0) {
+      this.clearSelection();
+    }
+  }
+
+  protected handleDocClick(event: MouseEvent, docId: string): void {
+    if (event.ctrlKey || event.metaKey) {
+      event.preventDefault();
+      this.toggleDocSelection(docId);
+      return;
+    }
+
+    if (event.shiftKey && this.lastSelectedId()) {
+      event.preventDefault();
+      this.selectRange(this.lastSelectedId()!, docId);
+      return;
+    }
+
+    // Normal click: if multi-selection is active, clear it first
+    if (this.selectedDocIds().size > 0) {
+      this.clearSelection();
+    }
+    this.lastSelectedId.set(docId);
+    this.selectDocument(docId);
+  }
+
+  protected toggleDocSelection(docId: string, event?: Event): void {
+    if (event) event.stopPropagation();
+    this.selectedDocIds.update((set) => {
+      const next = new Set(set);
+      if (next.has(docId)) {
+        next.delete(docId);
+      } else {
+        next.add(docId);
+      }
+      return next;
+    });
+    this.lastSelectedId.set(docId);
+  }
+
+  protected selectRange(fromId: string, toId: string): void {
+    const list = this.allVisibleDocIds();
+    const fromIdx = list.indexOf(fromId);
+    const toIdx = list.indexOf(toId);
+    if (fromIdx === -1 || toIdx === -1) {
+      this.toggleDocSelection(toId);
+      return;
+    }
+    const start = Math.min(fromIdx, toIdx);
+    const end = Math.max(fromIdx, toIdx);
+    const rangeIds = list.slice(start, end + 1);
+
+    this.selectedDocIds.update((set) => {
+      const next = new Set(set);
+      for (const id of rangeIds) {
+        next.add(id);
+      }
+      return next;
+    });
+    this.lastSelectedId.set(toId);
+  }
+
+  protected selectAllVisible(): void {
+    this.selectedDocIds.set(new Set(this.allVisibleDocIds()));
+  }
+
+  protected clearSelection(): void {
+    this.selectedDocIds.set(new Set());
+    this.isBatchMoveOpen.set(false);
+  }
+
+  protected batchMoveToFolder(folder: string | null): void {
+    const ids = Array.from(this.selectedDocIds());
+    if (ids.length === 0) return;
+    this.store.moveManyToFolder(ids, folder);
+    this.isBatchMoveOpen.set(false);
+    this.clearSelection();
+  }
+
+  protected batchDelete(): void {
+    const ids = Array.from(this.selectedDocIds());
+    if (ids.length === 0) return;
+    if (this.isBrowser) {
+      const count = ids.length;
+      const confirmed = confirm(`Delete ${count} selected document${count > 1 ? 's' : ''}?`);
+      if (!confirmed) return;
+    }
+    this.store.deleteMany(ids);
+    this.clearSelection();
+  }
+
+  protected batchToggleFavorite(forceFav?: boolean): void {
+    const ids = Array.from(this.selectedDocIds());
+    if (ids.length === 0) return;
+    this.store.toggleFavoriteMany(ids, forceFav);
+  }
+
+  protected async batchExportZip(): Promise<void> {
+    const ids = this.selectedDocIds();
+    const docs = this.store.documents().filter((d) => ids.has(d.id));
+    if (docs.length === 0) return;
+    await this.fileExport.exportAllAsZip(docs, `selection-${docs.length}-documents.zip`);
+  }
 
   protected createDocument(folder?: string): void {
     this.store.create('Untitled', '', folder);
@@ -228,5 +372,155 @@ export class Sidebar {
 
   protected async importFolder(): Promise<void> {
     await this.fileImport.importFolder();
+  }
+
+  // Document Drag & Drop Handlers
+  protected onDocDragStart(event: DragEvent, docId: string): void {
+    if (!event.dataTransfer) return;
+    this.draggingDocId.set(docId);
+
+    const isSelected = this.selectedDocIds().has(docId);
+    const idsToDrag = isSelected && this.selectedDocIds().size > 1
+      ? Array.from(this.selectedDocIds())
+      : [docId];
+
+    event.dataTransfer.setData('text/plain', docId);
+    event.dataTransfer.setData('application/x-md-doc', docId);
+    event.dataTransfer.setData('application/x-md-docs', JSON.stringify(idsToDrag));
+    event.dataTransfer.effectAllowed = 'move';
+  }
+
+  protected onDocDragEnd(): void {
+    this.draggingDocId.set(null);
+    this.draggingFolder.set(null);
+    this.dragOverFolder.set(null);
+    this.dragOverDocId.set(null);
+    this.dragOverPosition.set(null);
+    this.dragOverRoot.set(false);
+  }
+
+  protected onDocDragOver(event: DragEvent, targetDoc: MarkdownDocument): void {
+    const draggingId = this.draggingDocId();
+    if (!draggingId || draggingId === targetDoc.id) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'move';
+    }
+
+    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+    const position = event.clientY < rect.top + rect.height / 2 ? 'before' : 'after';
+    this.dragOverDocId.set(targetDoc.id);
+    this.dragOverPosition.set(position);
+  }
+
+  protected onDocDragLeave(targetDocId: string): void {
+    if (this.dragOverDocId() === targetDocId) {
+      this.dragOverDocId.set(null);
+      this.dragOverPosition.set(null);
+    }
+  }
+
+  protected onDocDrop(event: DragEvent, targetDoc: MarkdownDocument): void {
+    event.preventDefault();
+    event.stopPropagation();
+    const sourceId = this.draggingDocId();
+    const pos = this.dragOverPosition() || 'before';
+
+    if (sourceId && sourceId !== targetDoc.id) {
+      this.store.reorderDocuments(sourceId, targetDoc.id, pos, targetDoc.folder ?? null);
+    }
+
+    this.onDocDragEnd();
+  }
+
+  // Folder Drag & Drop Handlers
+  protected onFolderDragStart(event: DragEvent, folderName: string): void {
+    if (!event.dataTransfer) return;
+    this.draggingFolder.set(folderName);
+    event.dataTransfer.setData('application/x-md-folder', folderName);
+    event.dataTransfer.effectAllowed = 'move';
+  }
+
+  protected onFolderDragOver(event: DragEvent, folderName: string): void {
+    const isDoc = !!this.draggingDocId();
+    const isFolder = !!this.draggingFolder() && this.draggingFolder() !== folderName;
+
+    if (!isDoc && !isFolder) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'move';
+    }
+
+    this.dragOverFolder.set(folderName);
+  }
+
+  protected onFolderDragLeave(folderName: string): void {
+    if (this.dragOverFolder() === folderName) {
+      this.dragOverFolder.set(null);
+    }
+  }
+
+  protected onFolderDrop(event: DragEvent, targetFolder: string): void {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const docId = this.draggingDocId();
+    const sourceFolder = this.draggingFolder();
+
+    if (docId) {
+      if (this.selectedDocIds().has(docId) && this.selectedDocIds().size > 1) {
+        // Multi-document drop
+        this.store.moveManyToFolder(Array.from(this.selectedDocIds()), targetFolder);
+        this.clearSelection();
+      } else {
+        // Single document drop
+        this.store.moveToFolder(docId, targetFolder);
+      }
+      // Auto expand folder so user sees the dropped document
+      this.collapsedFolders.update((set) => {
+        const next = new Set(set);
+        next.delete(targetFolder);
+        return next;
+      });
+    } else if (sourceFolder && sourceFolder.toLowerCase() !== targetFolder.toLowerCase()) {
+      // Reorder folder
+      this.store.reorderFolders(sourceFolder, targetFolder, 'after');
+    }
+
+    this.onDocDragEnd();
+  }
+
+  // Root / Pages Section Drop Handlers
+  protected onRootDragOver(event: DragEvent): void {
+    if (!this.draggingDocId()) return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'move';
+    }
+    this.dragOverRoot.set(true);
+  }
+
+  protected onRootDragLeave(): void {
+    this.dragOverRoot.set(false);
+  }
+
+  protected onRootDrop(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    const docId = this.draggingDocId();
+    if (docId) {
+      if (this.selectedDocIds().has(docId) && this.selectedDocIds().size > 1) {
+        this.store.moveManyToFolder(Array.from(this.selectedDocIds()), null);
+        this.clearSelection();
+      } else {
+        this.store.moveToFolder(docId, null);
+      }
+    }
+    this.onDocDragEnd();
   }
 }

@@ -31,9 +31,14 @@ export class DocumentStore {
     return this._documents().find((d) => d.id === id) ?? null;
   });
 
-  /** Derived: documents sorted by updatedAt (newest first) */
+  /** Derived: documents sorted by custom order or updatedAt */
   readonly sortedDocuments = computed(() =>
-    [...this._documents()].sort((a, b) => b.updatedAt - a.updatedAt),
+    [...this._documents()].sort((a, b) => {
+      if (a.order !== undefined && b.order !== undefined) {
+        return a.order - b.order;
+      }
+      return b.updatedAt - a.updatedAt;
+    }),
   );
 
   /** Derived: favorite / pinned documents */
@@ -46,21 +51,31 @@ export class DocumentStore {
     this.sortedDocuments().filter((d) => !d.isFavorite),
   );
 
-  /** Derived: all active folders (union of custom folders and document folders) */
+  /** Derived: all active folders preserving custom drag order */
   readonly folders = computed(() => {
-    const folderSet = new Set<string>();
+    const list: string[] = [];
+    const seen = new Set<string>();
+
     for (const f of this._customFolders()) {
-      if (f.trim()) folderSet.add(f.trim());
-    }
-    for (const d of this._documents()) {
-      if (d.folder?.trim()) {
-        folderSet.add(d.folder.trim());
-      } else if (d.path && d.path.includes('/')) {
-        const inferred = d.path.substring(0, d.path.lastIndexOf('/')).trim();
-        if (inferred) folderSet.add(inferred);
+      const trimmed = f.trim();
+      if (trimmed && !seen.has(trimmed.toLowerCase())) {
+        seen.add(trimmed.toLowerCase());
+        list.push(trimmed);
       }
     }
-    return Array.from(folderSet).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+
+    for (const d of this._documents()) {
+      let folderName: string | undefined = d.folder?.trim();
+      if (!folderName && d.path && d.path.includes('/')) {
+        folderName = d.path.substring(0, d.path.lastIndexOf('/')).trim();
+      }
+      if (folderName && !seen.has(folderName.toLowerCase())) {
+        seen.add(folderName.toLowerCase());
+        list.push(folderName);
+      }
+    }
+
+    return list;
   });
 
   /** Derived: documents without any folder (root documents) */
@@ -193,6 +208,112 @@ export class DocumentStore {
         d.id === id ? { ...d, folder: trimmedFolder, updatedAt: Date.now() } : d,
       ),
     );
+  }
+
+  /** Move multiple documents to a folder (or null for root) */
+  moveManyToFolder(ids: string[], folder: string | null): void {
+    if (ids.length === 0) return;
+    const trimmedFolder = folder?.trim() || undefined;
+    if (trimmedFolder) {
+      this.registerFolder(trimmedFolder);
+    }
+    const idSet = new Set(ids);
+    this._documents.update((docs) =>
+      docs.map((d) =>
+        idSet.has(d.id) ? { ...d, folder: trimmedFolder, updatedAt: Date.now() } : d,
+      ),
+    );
+  }
+
+  /** Delete multiple documents in bulk */
+  deleteMany(ids: string[]): void {
+    if (ids.length === 0) return;
+    const idSet = new Set(ids);
+    this._documents.update((docs) => docs.filter((d) => !idSet.has(d.id)));
+    if (this._activeId() && idSet.has(this._activeId()!)) {
+      this._activeId.set(this._documents()[0]?.id ?? null);
+    }
+  }
+
+  /** Toggle favorite status for multiple documents in bulk */
+  toggleFavoriteMany(ids: string[], forceFavorite?: boolean): void {
+    if (ids.length === 0) return;
+    const idSet = new Set(ids);
+    this._documents.update((docs) =>
+      docs.map((d) => {
+        if (!idSet.has(d.id)) return d;
+        const fav = forceFavorite !== undefined ? forceFavorite : !d.isFavorite;
+        return { ...d, isFavorite: fav, updatedAt: Date.now() };
+      }),
+    );
+  }
+
+  /**
+   * Reorder a document before or after a target document, optionally moving it into a folder.
+   */
+  reorderDocuments(
+    sourceDocId: string,
+    targetDocId: string,
+    position: 'before' | 'after' = 'before',
+    targetFolder?: string | null,
+  ): void {
+    if (sourceDocId === targetDocId && targetFolder === undefined) return;
+
+    const docs = [...this._documents()];
+    const sourceIdx = docs.findIndex((d) => d.id === sourceDocId);
+    if (sourceIdx === -1) return;
+
+    const [sourceDoc] = docs.splice(sourceIdx, 1);
+
+    if (targetFolder !== undefined) {
+      const cleanFolder = targetFolder?.trim() || undefined;
+      sourceDoc.folder = cleanFolder;
+      if (cleanFolder) {
+        this.registerFolder(cleanFolder);
+      }
+    }
+
+    const targetIdx = docs.findIndex((d) => d.id === targetDocId);
+    const insertIdx = targetIdx === -1
+      ? docs.length
+      : position === 'after'
+        ? targetIdx + 1
+        : targetIdx;
+
+    docs.splice(insertIdx, 0, sourceDoc);
+
+    const baseTime = Date.now();
+    docs.forEach((doc, idx) => {
+      doc.order = baseTime + idx * 1000;
+    });
+
+    this._documents.set(docs);
+  }
+
+  /**
+   * Reorder folders before or after a target folder.
+   */
+  reorderFolders(
+    sourceFolder: string,
+    targetFolder: string,
+    position: 'before' | 'after' = 'before',
+  ): void {
+    if (sourceFolder.toLowerCase() === targetFolder.toLowerCase()) return;
+
+    const all = [...this.folders()];
+    const sourceIdx = all.findIndex((f) => f.toLowerCase() === sourceFolder.toLowerCase());
+    if (sourceIdx === -1) return;
+
+    const [removed] = all.splice(sourceIdx, 1);
+    const targetIdx = all.findIndex((f) => f.toLowerCase() === targetFolder.toLowerCase());
+    const insertIdx = targetIdx === -1
+      ? all.length
+      : position === 'after'
+        ? targetIdx + 1
+        : targetIdx;
+
+    all.splice(insertIdx, 0, removed);
+    this._customFolders.set(all);
   }
 
   /** Get all documents within a specific folder */

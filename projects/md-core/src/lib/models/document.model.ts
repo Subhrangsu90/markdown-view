@@ -10,6 +10,7 @@ export interface MarkdownDocument {
   icon?: string;
   isFavorite?: boolean;
   tags?: string[];
+  order?: number;
 }
 
 export function createDocument(
@@ -31,6 +32,7 @@ export function createDocument(
     folder: folder?.trim() || undefined,
     isFavorite: false,
     tags: [],
+    order: now,
   };
 }
 

@@ -84,8 +84,29 @@
         <div
           class="doc-item"
           [class.active]="store.activeId() === doc.id"
-          (click)="selectDocument(doc.id)"
+          [class.multi-selected]="selectedDocIds().has(doc.id)"
+          [class.dragging]="draggingDocId() === doc.id"
+          [class.drop-target-before]="dragOverDocId() === doc.id && dragOverPosition() === 'before'"
+          [class.drop-target-after]="dragOverDocId() === doc.id && dragOverPosition() === 'after'"
+          draggable="true"
+          (dragstart)="onDocDragStart($event, doc.id)"
+          (dragend)="onDocDragEnd()"
+          (dragover)="onDocDragOver($event, doc)"
+          (dragleave)="onDocDragLeave(doc.id)"
+          (drop)="onDocDrop($event, doc)"
+          (click)="handleDocClick($event, doc.id)"
         >
+          <button
+            class="doc-select-checkbox"
+            [class.checked]="selectedDocIds().has(doc.id)"
+            (click)="toggleDocSelection(doc.id, $event)"
+            [title]="selectedDocIds().has(doc.id) ? 'Deselect' : 'Select'"
+            aria-label="Select document"
+          >
+            @if (selectedDocIds().has(doc.id)) {
+              <md-icon name="check" [size]="10" [strokeWidth]="3" />
+            }
+          </button>
           <button
             class="doc-icon-btn"
             (click)="cycleIcon($event, doc.id, doc.icon)"
@@ -136,12 +157,23 @@
       </div>
 
       @for (group of folderGroups(); track group.name) {
-        <div class="folder-group">
+        <div
+          class="folder-group"
+          [class.drop-target-folder]="dragOverFolder() === group.name"
+        >
           <!-- Folder Header Row -->
           <div
             class="folder-header"
-            (click)="toggleFolder(group.name, $event)"
             [class.collapsed]="isFolderCollapsed(group.name)"
+            [class.dragging-folder]="draggingFolder() === group.name"
+            [class.drop-target-folder]="dragOverFolder() === group.name"
+            draggable="true"
+            (dragstart)="onFolderDragStart($event, group.name)"
+            (dragend)="onDocDragEnd()"
+            (dragover)="onFolderDragOver($event, group.name)"
+            (dragleave)="onFolderDragLeave(group.name)"
+            (drop)="onFolderDrop($event, group.name)"
+            (click)="toggleFolder(group.name, $event)"
           >
             <button class="folder-chevron-btn" title="Toggle folder">
               <md-icon
@@ -217,8 +249,29 @@
                 <div
                   class="doc-item nested-doc-item"
                   [class.active]="store.activeId() === doc.id"
-                  (click)="selectDocument(doc.id)"
+                  [class.multi-selected]="selectedDocIds().has(doc.id)"
+                  [class.dragging]="draggingDocId() === doc.id"
+                  [class.drop-target-before]="dragOverDocId() === doc.id && dragOverPosition() === 'before'"
+                  [class.drop-target-after]="dragOverDocId() === doc.id && dragOverPosition() === 'after'"
+                  draggable="true"
+                  (dragstart)="onDocDragStart($event, doc.id)"
+                  (dragend)="onDocDragEnd()"
+                  (dragover)="onDocDragOver($event, doc)"
+                  (dragleave)="onDocDragLeave(doc.id)"
+                  (drop)="onDocDrop($event, doc)"
+                  (click)="handleDocClick($event, doc.id)"
                 >
+                  <button
+                    class="doc-select-checkbox"
+                    [class.checked]="selectedDocIds().has(doc.id)"
+                    (click)="toggleDocSelection(doc.id, $event)"
+                    [title]="selectedDocIds().has(doc.id) ? 'Deselect' : 'Select'"
+                    aria-label="Select document"
+                  >
+                    @if (selectedDocIds().has(doc.id)) {
+                      <md-icon name="check" [size]="10" [strokeWidth]="3" />
+                    }
+                  </button>
                   <button
                     class="doc-icon-btn"
                     (click)="cycleIcon($event, doc.id, doc.icon)"
@@ -257,8 +310,15 @@
                   </div>
                 </div>
               } @empty {
-                <div class="folder-empty-placeholder" (click)="createDocument(group.name)">
-                  <span>+ Add a page in {{ group.name }}</span>
+                <div
+                  class="folder-empty-placeholder"
+                  [class.drop-target-folder]="dragOverFolder() === group.name"
+                  (dragover)="onFolderDragOver($event, group.name)"
+                  (dragleave)="onFolderDragLeave(group.name)"
+                  (drop)="onFolderDrop($event, group.name)"
+                  (click)="createDocument(group.name)"
+                >
+                  <span>+ Add or drop page in {{ group.name }}</span>
                 </div>
               }
             </div>
@@ -268,59 +328,88 @@
     }
 
     <!-- Root / Uncategorized Pages Section -->
-    @if (filteredUncategorizedDocuments().length > 0) {
-      <div class="section-divider">
-        <md-icon name="file" [size]="12" />
-        <span>Pages</span>
-      </div>
-
-      @for (doc of filteredUncategorizedDocuments(); track doc.id) {
-        <div
-          class="doc-item"
-          [class.active]="store.activeId() === doc.id"
-          (click)="selectDocument(doc.id)"
-        >
-          <button
-            class="doc-icon-btn"
-            (click)="cycleIcon($event, doc.id, doc.icon)"
-            title="Click to change icon"
-          >
-            <md-icon [name]="doc.icon || 'document'" [size]="14" />
-          </button>
-          <div class="doc-info">
-            <span class="doc-title">{{ doc.title || 'Untitled' }}</span>
-            <span class="doc-date">{{ doc.updatedAt | timeAgo }}</span>
-          </div>
-
-          <div class="doc-actions">
-            <!-- Favorite button -->
-            <button
-              class="doc-action-btn star-btn"
-              [class.starred]="doc.isFavorite"
-              (click)="toggleFavorite($event, doc.id)"
-              title="Star favorite"
-            >
-              <md-icon [name]="doc.isFavorite ? 'star-filled' : 'star'" [size]="13" />
-            </button>
-            <!-- Duplicate button -->
-            <button
-              class="doc-action-btn"
-              (click)="duplicateDocument($event, doc.id)"
-              title="Duplicate"
-            >
-              <md-icon name="duplicate" [size]="12" />
-            </button>
-            <!-- Delete button -->
-            <button
-              class="doc-action-btn delete-btn"
-              (click)="deleteDocument($event, doc.id)"
-              title="Delete"
-            >
-              <md-icon name="delete" [size]="12" />
-            </button>
-          </div>
-        </div>
+    <div
+      class="section-divider root-section-divider"
+      [class.drop-target-root]="dragOverRoot()"
+      (dragover)="onRootDragOver($event)"
+      (dragleave)="onRootDragLeave()"
+      (drop)="onRootDrop($event)"
+      title="Drop documents here to move to Root"
+    >
+      <md-icon name="file" [size]="12" />
+      <span>Pages</span>
+      @if (dragOverRoot()) {
+        <span class="drop-hint-badge">Move to Root</span>
       }
+    </div>
+
+    @for (doc of filteredUncategorizedDocuments(); track doc.id) {
+      <div
+        class="doc-item"
+        [class.active]="store.activeId() === doc.id"
+        [class.multi-selected]="selectedDocIds().has(doc.id)"
+        [class.dragging]="draggingDocId() === doc.id"
+        [class.drop-target-before]="dragOverDocId() === doc.id && dragOverPosition() === 'before'"
+        [class.drop-target-after]="dragOverDocId() === doc.id && dragOverPosition() === 'after'"
+        draggable="true"
+        (dragstart)="onDocDragStart($event, doc.id)"
+        (dragend)="onDocDragEnd()"
+        (dragover)="onDocDragOver($event, doc)"
+        (dragleave)="onDocDragLeave(doc.id)"
+        (drop)="onDocDrop($event, doc)"
+        (click)="handleDocClick($event, doc.id)"
+      >
+        <button
+          class="doc-select-checkbox"
+          [class.checked]="selectedDocIds().has(doc.id)"
+          (click)="toggleDocSelection(doc.id, $event)"
+          [title]="selectedDocIds().has(doc.id) ? 'Deselect' : 'Select'"
+          aria-label="Select document"
+        >
+          @if (selectedDocIds().has(doc.id)) {
+            <md-icon name="check" [size]="10" [strokeWidth]="3" />
+          }
+        </button>
+        <button
+          class="doc-icon-btn"
+          (click)="cycleIcon($event, doc.id, doc.icon)"
+          title="Click to change icon"
+        >
+          <md-icon [name]="doc.icon || 'document'" [size]="14" />
+        </button>
+        <div class="doc-info">
+          <span class="doc-title">{{ doc.title || 'Untitled' }}</span>
+          <span class="doc-date">{{ doc.updatedAt | timeAgo }}</span>
+        </div>
+
+        <div class="doc-actions">
+          <!-- Favorite button -->
+          <button
+            class="doc-action-btn star-btn"
+            [class.starred]="doc.isFavorite"
+            (click)="toggleFavorite($event, doc.id)"
+            title="Star favorite"
+          >
+            <md-icon [name]="doc.isFavorite ? 'star-filled' : 'star'" [size]="13" />
+          </button>
+          <!-- Duplicate button -->
+          <button
+            class="doc-action-btn"
+            (click)="duplicateDocument($event, doc.id)"
+            title="Duplicate"
+          >
+            <md-icon name="duplicate" [size]="12" />
+          </button>
+          <!-- Delete button -->
+          <button
+            class="doc-action-btn delete-btn"
+            (click)="deleteDocument($event, doc.id)"
+            title="Delete"
+          >
+            <md-icon name="delete" [size]="12" />
+          </button>
+        </div>
+      </div>
     }
 
     <!-- Empty State -->
@@ -330,6 +419,82 @@
       </div>
     }
   </div>
+
+  <!-- Floating Batch Actions Bar -->
+  @if (selectedDocIds().size > 0) {
+    <div class="batch-bar-container">
+      <div class="batch-bar">
+        <div class="batch-bar-header">
+          <span class="batch-count-badge">{{ selectedDocIds().size }} selected</span>
+          <button class="batch-select-all-btn" (click)="selectAllVisible()" title="Select all visible documents">
+            All
+          </button>
+          <button class="batch-close-btn" (click)="clearSelection()" title="Clear selection (Esc)">
+            <md-icon name="close" [size]="12" [strokeWidth]="2.5" />
+          </button>
+        </div>
+
+        <div class="batch-actions-row">
+          <!-- Move to Folder Dropdown -->
+          <div class="batch-dropdown-container">
+            <button
+              class="batch-action-btn"
+              (click)="isBatchMoveOpen.set(!isBatchMoveOpen())"
+              title="Move selected items to folder"
+            >
+              <md-icon name="folder" [size]="12" />
+              <span>Move</span>
+              <md-icon name="chevron-down" [size]="10" />
+            </button>
+
+            @if (isBatchMoveOpen()) {
+              <div class="batch-folder-menu" (click)="$event.stopPropagation()">
+                <div class="batch-menu-title">Move {{ selectedDocIds().size }} to:</div>
+                <button class="batch-menu-opt" (click)="batchMoveToFolder(null)">
+                  <md-icon name="file" [size]="12" />
+                  <span>Pages (Root)</span>
+                </button>
+                @for (folder of store.folders(); track folder) {
+                  <button class="batch-menu-opt" (click)="batchMoveToFolder(folder)">
+                    <md-icon name="folder" [size]="12" />
+                    <span>{{ folder }}</span>
+                  </button>
+                }
+              </div>
+            }
+          </div>
+
+          <!-- Export ZIP -->
+          <button
+            class="batch-action-btn"
+            (click)="batchExportZip()"
+            title="Export selected as ZIP"
+          >
+            <md-icon name="zip" [size]="12" />
+            <span>ZIP</span>
+          </button>
+
+          <!-- Star Favorite -->
+          <button
+            class="batch-action-btn"
+            (click)="batchToggleFavorite(true)"
+            title="Star all selected"
+          >
+            <md-icon name="star-filled" [size]="12" />
+          </button>
+
+          <!-- Delete -->
+          <button
+            class="batch-action-btn delete"
+            (click)="batchDelete()"
+            title="Delete selected"
+          >
+            <md-icon name="delete" [size]="12" />
+          </button>
+        </div>
+      </div>
+    </div>
+  }
 
   <!-- Footer -->
   <div class="sidebar-footer">

@@ -141,4 +141,85 @@ describe('DocumentStore', () => {
     expect(store.folders()).not.toContain('TrashFolder');
     expect(store.documents().some((d) => d.id === doc.id)).toBe(false);
   });
+
+  it('should reorder documents and optionally change folder', () => {
+    const doc1 = store.create('Doc 1', 'Content 1', 'Folder A');
+    const doc2 = store.create('Doc 2', 'Content 2', 'Folder A');
+    const doc3 = store.create('Doc 3', 'Content 3', 'Folder B');
+
+    // Reorder doc3 before doc1 and move to Folder A
+    store.reorderDocuments(doc3.id, doc1.id, 'before', 'Folder A');
+
+    const updatedDoc3 = store.documents().find((d) => d.id === doc3.id);
+    expect(updatedDoc3?.folder).toBe('Folder A');
+
+    const docsInFolderA = store.getDocumentsInFolder('Folder A');
+    expect(docsInFolderA[0].id).toBe(doc3.id);
+    expect(docsInFolderA[1].id).toBe(doc1.id);
+    expect(docsInFolderA[2].id).toBe(doc2.id);
+  });
+
+  it('should reorder folders and persist order', () => {
+    store.createFolder('Alpha');
+    store.createFolder('Beta');
+    store.createFolder('Gamma');
+
+    // Move Gamma before Alpha
+    store.reorderFolders('Gamma', 'Alpha', 'before');
+
+    const folders = store.folders();
+    const alphaIdx = folders.indexOf('Alpha');
+    const gammaIdx = folders.indexOf('Gamma');
+  });
+
+  it('should batch move multiple documents to a folder or root', () => {
+    const doc1 = store.create('Doc 1', 'Content', 'Folder A');
+    const doc2 = store.create('Doc 2', 'Content', 'Folder B');
+    const doc3 = store.create('Doc 3', 'Content');
+
+    // Batch move doc1 and doc2 to Folder C
+    store.moveManyToFolder([doc1.id, doc2.id], 'Folder C');
+    expect(store.documents().find((d) => d.id === doc1.id)?.folder).toBe('Folder C');
+    expect(store.documents().find((d) => d.id === doc2.id)?.folder).toBe('Folder C');
+    expect(store.documents().find((d) => d.id === doc3.id)?.folder).toBeUndefined();
+
+    // Batch move to root
+    store.moveManyToFolder([doc1.id, doc2.id], null);
+    expect(store.documents().find((d) => d.id === doc1.id)?.folder).toBeUndefined();
+    expect(store.documents().find((d) => d.id === doc2.id)?.folder).toBeUndefined();
+  });
+
+  it('should batch delete multiple documents', () => {
+    const doc1 = store.create('Doc 1', 'Content');
+    const doc2 = store.create('Doc 2', 'Content');
+    const doc3 = store.create('Doc 3', 'Content');
+
+    store.select(doc1.id);
+    expect(store.activeId()).toBe(doc1.id);
+
+    store.deleteMany([doc1.id, doc2.id]);
+    expect(store.documents().some((d) => d.id === doc1.id)).toBe(false);
+    expect(store.documents().some((d) => d.id === doc2.id)).toBe(false);
+    expect(store.documents().some((d) => d.id === doc3.id)).toBe(true);
+    // Active id should reset to a valid surviving document
+    expect(store.activeId()).toBeTruthy();
+    expect(store.activeId()).not.toBe(doc1.id);
+    expect(store.activeId()).not.toBe(doc2.id);
+  });
+
+  it('should batch toggle favorite status', () => {
+    const doc1 = store.create('Doc 1', 'Content');
+    const doc2 = store.create('Doc 2', 'Content');
+
+    expect(doc1.isFavorite).toBeFalsy();
+    expect(doc2.isFavorite).toBeFalsy();
+
+    store.toggleFavoriteMany([doc1.id, doc2.id], true);
+    expect(store.documents().find((d) => d.id === doc1.id)?.isFavorite).toBe(true);
+    expect(store.documents().find((d) => d.id === doc2.id)?.isFavorite).toBe(true);
+
+    store.toggleFavoriteMany([doc1.id, doc2.id], false);
+    expect(store.documents().find((d) => d.id === doc1.id)?.isFavorite).toBe(false);
+    expect(store.documents().find((d) => d.id === doc2.id)?.isFavorite).toBe(false);
+  });
 });
