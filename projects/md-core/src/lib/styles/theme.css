@@ -47,6 +47,15 @@
   --code-inline-bg: rgba(255, 255, 255, 0.08);
   --code-inline-text: #eb5757;
   --code-inline-border: rgba(255, 255, 255, 0.12);
+
+  /* Fallback & Component Aliases */
+  --bg-primary: #202126;
+  --bg-secondary: #24252a;
+  --bg-hover: rgba(255, 255, 255, 0.08);
+  --border-color: rgba(255, 255, 255, 0.12);
+  --border-color-hover: rgba(255, 255, 255, 0.22);
+  --color-primary: #06b6d4;
+  --color-primary-subtle: rgba(6, 182, 212, 0.15);
 }
 
 [data-theme="light"],
@@ -95,6 +104,15 @@
   --code-inline-bg: rgba(55, 53, 47, 0.06);
   --code-inline-text: #eb5757;
   --code-inline-border: rgba(55, 53, 47, 0.1);
+
+  /* Fallback & Component Aliases */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f4f5f7;
+  --bg-hover: rgba(0, 0, 0, 0.06);
+  --border-color: rgba(0, 0, 0, 0.12);
+  --border-color-hover: rgba(0, 0, 0, 0.22);
+  --color-primary: #0891b2;
+  --color-primary-subtle: rgba(8, 145, 178, 0.12);
 }
 
 /* Typography defaults */

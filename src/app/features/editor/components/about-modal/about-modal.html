@@ -1,0 +1,111 @@
+<div class="modal-backdrop" (click)="close.emit()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <!-- Header with Branding -->
+    <div class="about-hero">
+      <div class="about-brand-icon">
+        <md-icon name="brand" [size]="28" />
+      </div>
+      <h2 class="about-brand-title">MarkdownView</h2>
+      <p class="about-brand-tagline">The Open-Source, Notion-Style Markdown Workspace</p>
+
+      <div class="about-badges-row">
+        <span class="about-badge version">v1.0.0</span>
+        <span class="about-badge license">MIT License</span>
+        <span class="about-badge privacy">100% Offline & Private</span>
+      </div>
+
+      <button class="modal-close-btn" (click)="close.emit()" title="Close (Esc)">
+        <md-icon name="close" [size]="16" />
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="about-body">
+      <!-- Mission / Overview -->
+      <section class="about-section">
+        <h4>About the Project</h4>
+        <p>
+          <strong>MarkdownView</strong> is an open-source, privacy-first markdown editor built for developers, researchers, and creators. It brings together the speed and fluidity of Notion with the uncompromised flexibility of raw Markdown, scientific $\LaTeX$ KaTeX math, dynamic Mermaid diagrams, and native local filesystem synchronization.
+        </p>
+      </section>
+
+      <!-- Key Features Highlights -->
+      <section class="about-section">
+        <h4>Core Architecture & Power</h4>
+        <div class="about-features-grid">
+          <div class="feature-item">
+            <md-icon name="bolt" [size]="16" />
+            <div>
+              <strong>Notion-Style Slash Commands</strong>
+              <p>Summon headings, code blocks, task lists, and diagrams with a single <code>/</code> keystroke.</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <md-icon name="math" [size]="16" />
+            <div>
+              <strong>KaTeX Scientific Math</strong>
+              <p>Full inline and block mathematical formulas rendered at 60 FPS.</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <md-icon name="flowchart" [size]="16" />
+            <div>
+              <strong>Mermaid.js Visual Diagrams</strong>
+              <p>Render flowcharts, sequence diagrams, mindmaps, and architecture diagrams effortlessly.</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <md-icon name="hard-drive" [size]="16" />
+            <div>
+              <strong>Local File System Sync</strong>
+              <p>Bi-directional saving directly to your computer's folders via Web File System Access API.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Built With -->
+      <section class="about-section">
+        <h4>Built With Modern Web Tech</h4>
+        <div class="tech-pills">
+          <span class="tech-pill">Angular 22 (Signals)</span>
+          <span class="tech-pill">Tailwind CSS 4</span>
+          <span class="tech-pill">Marked AST</span>
+          <span class="tech-pill">KaTeX 0.16</span>
+          <span class="tech-pill">Mermaid 11</span>
+          <span class="tech-pill">PrismJS</span>
+          <span class="tech-pill">TypeScript 6</span>
+        </div>
+      </section>
+
+      <!-- Open Source Links & Community -->
+      <div class="about-actions-bar">
+        <a
+          href="https://github.com/Subhrangsu90/markdown-view"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="btn-primary-oss"
+        >
+          <md-icon name="github" [size]="16" />
+          <span>Star on GitHub</span>
+          <md-icon name="external-link" [size]="12" />
+        </a>
+
+        <a
+          href="https://github.com/Subhrangsu90/markdown-view/issues"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="btn-secondary-oss"
+        >
+          <md-icon name="info" [size]="14" />
+          <span>Report an Issue</span>
+        </a>
+
+        <button class="btn-secondary-oss" (click)="openShortcuts.emit()">
+          <md-icon name="help" [size]="14" />
+          <span>Keyboard Shortcuts</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

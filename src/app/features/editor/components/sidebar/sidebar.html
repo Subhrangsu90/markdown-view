@@ -29,6 +29,11 @@
       <span>New Page</span>
     </button>
     <div class="action-toolbar">
+      <button class="action-btn secondary" (click)="openTemplates.emit()" title="Explore starter templates">
+        <md-icon name="template" [size]="13" />
+        <span>Templates</span>
+      </button>
+
       <button class="action-btn secondary" (click)="startCreateFolder()" title="Create New Folder">
         <md-icon name="folder-plus" [size]="13" />
         <span>+ Folder</span>
@@ -601,7 +606,26 @@
 
   <!-- Footer -->
   <div class="sidebar-footer">
-    <span class="doc-count">{{ store.documents().length }} documents</span>
+    <div class="footer-meta">
+      <span class="doc-count">{{ store.documents().length }} docs</span>
+      <button class="footer-badge-btn" (click)="openAbout.emit()" title="About MarkdownView v1.0.0">
+        v1.0.0 OSS
+      </button>
+    </div>
+    <div class="footer-actions">
+      <button class="footer-icon-btn" (click)="openAbout.emit()" title="About MarkdownView">
+        <md-icon name="info" [size]="14" />
+      </button>
+      <a
+        href="https://github.com/Subhrangsu90/markdown-view"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="footer-icon-btn"
+        title="View source & star on GitHub"
+      >
+        <md-icon name="github" [size]="14" />
+      </a>
+    </div>
   </div>
   <!-- Delete Confirmation Popup -->
   @if (pendingDeleteId()) {

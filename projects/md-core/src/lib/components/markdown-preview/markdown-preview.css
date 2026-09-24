@@ -428,13 +428,79 @@
   margin: 2.2rem 0;
 }
 
-/* ===== Images ===== */
+/* ===== Images & Badges ===== */
 :host ::ng-deep img {
+  display: inline-block;
+  vertical-align: middle;
   max-width: 100%;
+  height: auto;
+}
+
+/* Standalone content images (screenshots, diagrams) */
+:host ::ng-deep p > img:only-child:not([src*="shields.io"]):not([src*="badge"]):not([src*="badgen"]):not(.markdown-badge),
+:host ::ng-deep p > a:only-child > img:only-child:not([src*="shields.io"]):not([src*="badge"]):not([src*="badgen"]):not(.markdown-badge) {
+  display: block;
+  margin: 1.5rem auto;
   border-radius: 10px;
-  margin: 1.25rem 0;
   box-shadow: var(--shadow-md);
   border: 1px solid var(--border);
+}
+
+/* Badges (Shields.io, GitHub Action badges, etc.) */
+:host ::ng-deep img[src*="shields.io"],
+:host ::ng-deep img[src*="badge"],
+:host ::ng-deep img[src*="badgen"],
+:host ::ng-deep img[src*="workflows/"][src*="badge"],
+:host ::ng-deep img[src*="codecov"],
+:host ::ng-deep img.markdown-badge,
+:host ::ng-deep .markdown-badge-row img {
+  display: inline-block !important;
+  vertical-align: middle !important;
+  margin: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  max-height: 28px;
+  width: auto;
+}
+
+/* Badge Rows: display as horizontal flex wrap with clean spacing */
+:host ::ng-deep .markdown-badge-row,
+:host ::ng-deep p:has(> a > img[src*="shields.io"], > a > img[src*="badge"], > img[src*="shields.io"], > img[src*="badge"]) {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin: 0.85rem 0 1.25rem !important;
+}
+
+:host ::ng-deep .markdown-badge-row[align="center"],
+:host ::ng-deep p[align="center"]:has(> a > img[src*="shields.io"], > a > img[src*="badge"], > img[src*="shields.io"], > img[src*="badge"]) {
+  justify-content: center !important;
+}
+
+:host ::ng-deep .markdown-badge-row br,
+:host ::ng-deep p:has(> a > img[src*="shields.io"], > a > img[src*="badge"], > img[src*="shields.io"], > img[src*="badge"]) br {
+  display: none !important;
+}
+
+:host ::ng-deep .markdown-badge-link,
+:host ::ng-deep .markdown-badge-row a,
+:host ::ng-deep p:has(> a > img[src*="shields.io"], > a > img[src*="badge"]) a {
+  display: inline-flex !important;
+  align-items: center !important;
+  text-decoration: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+:host ::ng-deep .markdown-badge-link:hover,
+:host ::ng-deep .markdown-badge-row a:hover,
+:host ::ng-deep p:has(> a > img[src*="shields.io"], > a > img[src*="badge"]) a:hover {
+  opacity: 0.88;
+  transform: translateY(-1px);
 }
 
 /* ===== Strong / Em / Strikethrough ===== */
@@ -551,16 +617,28 @@
 :host ::ng-deep .katex-block-wrapper {
   display: flex;
   justify-content: center;
-  padding: 18px 16px;
-  margin: 1.4rem 0;
+  align-items: center;
+  padding: 16px 14px;
+  margin: 1.25rem 0;
   background: var(--surface-card);
   border: 1px solid var(--border);
   border-radius: 8px;
   overflow-x: auto;
   font-size: 1.15em;
+  box-shadow: var(--shadow-sm);
+}
+
+:host ::ng-deep .katex-inline-wrapper {
+  display: inline-block;
+  vertical-align: baseline;
+  padding: 0 2px;
+}
+
+:host ::ng-deep .katex-display {
+  margin: 0 !important;
 }
 
 :host ::ng-deep .katex {
-  font-size: 1.1em;
+  font-size: 1.08em;
   text-rendering: auto;
 }

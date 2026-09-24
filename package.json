@@ -1,15 +1,33 @@
 {
   "name": "markdown-view",
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "The open-source, privacy-first Notion-style Markdown workspace with live preview, KaTeX math, Mermaid diagrams, and local filesystem sync.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Subhrangsu90/markdown-view.git"
+  },
+  "homepage": "https://github.com/Subhrangsu90/markdown-view#readme",
+  "keywords": [
+    "markdown",
+    "notion-style",
+    "mermaid",
+    "katex",
+    "live-preview",
+    "angular",
+    "open-source",
+    "offline-first",
+    "notes-app"
+  ],
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
+    "build:lib": "ng build md-core",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "serve:ssr:markdown-view": "node dist/markdown-view/server/server.mjs"
   },
-  "private": true,
   "packageManager": "npm@11.6.4",
   "dependencies": {
     "@angular/common": "^22.1.0",

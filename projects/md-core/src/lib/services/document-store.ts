@@ -487,64 +487,111 @@ export class DocumentStore {
 
 const WELCOME_CONTENT = `# Welcome to MarkdownView ✨
 
-A **Notion-inspired** markdown editor with live preview.
-
-## Features
-
-- 📝 **Edit** — Write in raw markdown with syntax support
-- 👁️ **Preview** — See rendered output in real-time
-- 🔀 **Split** — Side-by-side editing and preview
-- 📁 **Import** — Drag & drop \`.md\` files or import folders
-- 💾 **Auto-save** — Everything persists in your browser
-
-## Markdown Examples
-
-### Text Formatting
-
-**Bold text**, *italic text*, ~~strikethrough~~, \`inline code\`
-
-### Links & Images
-
-[Visit Angular](https://angular.dev)
-
-### Code Blocks
-
-\`\`\`typescript
-const greeting = signal('Hello, Markdown!');
-const upper = computed(() => greeting().toUpperCase());
-\`\`\`
-
-### Lists
-
-- First item
-- Second item
-  - Nested item
-  - Another nested
-
-1. Ordered first
-2. Ordered second
-
-### Task List
-
-- [x] Create the editor
-- [x] Add markdown preview
-- [ ] Take over the world
-
-### Blockquote
-
-> "The best way to predict the future is to invent it."
-> — Alan Kay
-
-### Table
-
-| Feature | Status |
-|---------|--------|
-| Editor | ✅ Done |
-| Preview | ✅ Done |
-| Split View | ✅ Done |
-| File Import | ✅ Done |
+> [!NOTE]
+> **MarkdownView** is an open-source, privacy-first, Notion-inspired markdown workspace with live split preview, scientific math, dynamic diagrams, and offline-first local auto-save.
 
 ---
 
-Start editing to see the magic! 🚀
+## ⚡ Superpowers & Features
+
+- ⌨️ **Notion-Style Slash Commands** — Type \`/\` on any empty line to summon the command palette
+- 🔀 **Live Split-View** — Synchronized scroll between raw editor and rendered document
+- 📐 **Scientific Math via KaTeX** — Inline $E = mc^2$ and complex multi-line $\\LaTeX$ formulas
+- 📊 **Mermaid.js Diagrams** — Flowcharts, sequence diagrams, state machines, and Gantt charts
+- 💻 **PrismJS Syntax Highlighting** — Clean code formatting with one-click copy buttons
+- 📂 **Workspace File Management** — Folders, drag-and-drop reordering, favorites, and batch operations
+- 📁 **Native Disk Sync** — Connect a local folder via Web File System Access API for bi-directional disk saving
+- 📤 **Multi-Format Export** — Instant export to Markdown (\`.md\`), Standalone HTML, Print-to-PDF, and ZIP
+- 🎨 **Adaptive Themes** — Handcrafted dark and light modes with seamless contrast transitions
+
+---
+
+## 📊 Live Mermaid Diagram
+
+\`\`\`mermaid
+graph TD
+    A[📝 Write Markdown] -->|Real-time AST| B(md-core Engine)
+    B --> C{View Mode}
+    C -->|Split| D[🔀 Split View]
+    C -->|Preview| E[👁️ Rendered HTML]
+    C -->|Edit| F[⌨️ Raw Editor]
+    B --> G[💾 Local Storage & Disk Sync]
+    B --> H[📤 PDF / HTML / ZIP Export]
+
+    style A fill:#3b82f6,stroke:#1d4ed8,color:#fff
+    style B fill:#8b5cf6,stroke:#6d28d9,color:#fff
+    style D fill:#10b981,stroke:#047857,color:#fff
+\`\`\`
+
+---
+
+## 📐 Mathematical Equations (KaTeX)
+
+Evaluate quadratic roots using the quadratic formula:
+
+$$
+x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}
+$$
+
+Cauchy's integral formula for complex analysis:
+
+$$
+f(a) = \\frac{1}{2\\pi i} \\oint_\\gamma \\frac{f(z)}{z - a} dz
+$$
+
+---
+
+## 💻 Code Highlighting with PrismJS
+
+\`\`\`typescript
+import { signal, computed } from '@angular/core';
+
+// Modern Reactive State with Angular Signals
+const documentTitle = signal('Architectural Blueprint');
+const wordCount = signal(1420);
+
+// Derived state automatically updates
+const readingTimeMinutes = computed(() => Math.ceil(wordCount() / 200));
+
+console.log(\`Ready to read in \${readingTimeMinutes()} minutes!\`);
+\`\`\`
+
+---
+
+## 📋 Interactive Task Checklist
+
+- [x] Set up open-source repository files and license
+- [x] Integrate KaTeX math and Mermaid.js diagram engines
+- [x] Add Notion-style \`/\` slash menu formatting palette
+- [ ] Connect your local directory for direct hard-drive autosave
+- [ ] Explore the Template Library for pre-built RFCs and Roadmaps
+
+---
+
+## 💬 Callouts & Alerts
+
+> [!TIP]
+> Press \`Ctrl + /\` (or \`Cmd + /\`) at any time to open the **Keyboard Shortcuts** modal.
+
+> [!IMPORTANT]
+> Your notes stay 100% private. All documents are stored strictly in your browser's local database or your explicitly selected local directory. No servers, no tracking.
+
+---
+
+## ⌨️ Essential Keyboard Shortcuts
+
+| Shortcut | Action |
+|:---------|:-------|
+| \`Ctrl + \\\` | Toggle Split View mode |
+| \`Ctrl + E\` | Switch to Editor-only mode |
+| \`Ctrl + P\` | Switch to Preview mode |
+| \`Ctrl + B\` | Toggle Sidebar |
+| \`Ctrl + F\` | Find & Replace |
+| \`Ctrl + O\` | Document Outline (Table of Contents) |
+| \`/\` (slash) | Open Block Command Menu |
+
+---
+
+*Enjoy writing with MarkdownView! Free and open-source under the MIT License.* 🚀
 `;
+

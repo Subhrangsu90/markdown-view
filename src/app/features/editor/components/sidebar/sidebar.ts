@@ -51,6 +51,8 @@ export class Sidebar {
 
   readonly isOpen = input<boolean>(true);
   readonly toggleSidebar = output<void>();
+  readonly openTemplates = output<void>();
+  readonly openAbout = output<void>();
 
   protected readonly searchQuery = signal('');
 

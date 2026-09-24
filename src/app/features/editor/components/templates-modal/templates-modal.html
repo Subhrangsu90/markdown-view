@@ -1,0 +1,73 @@
+<div class="modal-backdrop" (click)="close.emit()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="modal-header">
+      <div class="modal-title-row">
+        <div class="modal-icon-badge">
+          <md-icon name="template" [size]="18" />
+        </div>
+        <div>
+          <h3>Template Library</h3>
+          <p class="modal-subtitle">Kickstart your notes with pre-built engineering, product, and research specs.</p>
+        </div>
+      </div>
+      <button class="modal-close-btn" (click)="close.emit()" title="Close (Esc)">
+        <md-icon name="close" [size]="16" />
+      </button>
+    </div>
+
+    <!-- Controls: Search & Category Filter -->
+    <div class="modal-controls">
+      <div class="template-search">
+        <md-icon name="search" [size]="14" class="search-icon" />
+        <input
+          type="text"
+          placeholder="Search templates..."
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event)"
+        />
+      </div>
+
+      <div class="category-pills">
+        @for (cat of categories; track cat) {
+          <button
+            class="category-pill"
+            [class.active]="selectedCategory() === cat"
+            (click)="selectedCategory.set(cat)"
+          >
+            {{ cat }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Templates Grid -->
+    <div class="modal-body">
+      <div class="templates-grid">
+        @for (tpl of filteredTemplates(); track tpl.id) {
+          <div class="template-card" (click)="applyTemplate(tpl)">
+            <div class="template-card-header">
+              <div class="template-card-icon">
+                <md-icon [name]="tpl.icon" [size]="20" />
+              </div>
+              <span class="category-badge">{{ tpl.category }}</span>
+            </div>
+            <h4 class="template-card-title">{{ tpl.title }}</h4>
+            <p class="template-card-desc">{{ tpl.description }}</p>
+            <div class="template-card-footer">
+              <span class="use-template-link">
+                <span>Use Template</span>
+                <md-icon name="chevron-right" [size]="14" />
+              </span>
+            </div>
+          </div>
+        } @empty {
+          <div class="empty-results">
+            <md-icon name="search" [size]="32" />
+            <p>No templates found matching your search.</p>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

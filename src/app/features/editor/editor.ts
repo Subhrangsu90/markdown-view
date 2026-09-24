@@ -23,6 +23,7 @@ import {
   MdIcon,
   DOCUMENT_ICON_PALETTE,
   resolveIconName,
+  DocumentTemplate,
 } from 'md-core';
 import { FormsModule } from '@angular/forms';
 import { Sidebar } from './components/sidebar/sidebar';
@@ -30,6 +31,8 @@ import { MarkdownInput, SlashTriggerEvent } from './components/markdown-input/ma
 import { SlashMenu, SlashCommand } from './components/slash-menu/slash-menu';
 import { FindReplace } from './components/find-replace/find-replace';
 import { ShortcutsModal } from './components/shortcuts-modal/shortcuts-modal';
+import { TemplatesModal } from './components/templates-modal/templates-modal';
+import { AboutModal } from './components/about-modal/about-modal';
 
 export type ViewMode = 'edit' | 'preview' | 'split';
 
@@ -48,6 +51,8 @@ export type ViewMode = 'edit' | 'preview' | 'split';
     SlashMenu,
     FindReplace,
     ShortcutsModal,
+    TemplatesModal,
+    AboutModal,
     MdIcon,
   ],
   templateUrl: './editor.html',
@@ -75,6 +80,9 @@ export class Editor {
   protected readonly isTocOpen = signal(false);
   protected readonly isFindOpen = signal(false);
   protected readonly isShortcutsOpen = signal(false);
+  protected readonly isTemplatesOpen = signal(false);
+  protected readonly isAboutOpen = signal(false);
+  protected readonly isZenMode = signal(false);
   protected readonly slashState = signal<SlashTriggerEvent>({
     active: false,
     query: '',
@@ -136,6 +144,25 @@ export class Editor {
 
   protected toggleShortcuts(): void {
     this.isShortcutsOpen.update((v) => !v);
+  }
+
+  protected toggleTemplates(): void {
+    this.isTemplatesOpen.update((v) => !v);
+  }
+
+  protected toggleAbout(): void {
+    this.isAboutOpen.update((v) => !v);
+  }
+
+  protected toggleZenMode(): void {
+    this.isZenMode.update((v) => !v);
+  }
+
+  protected onApplyTemplate(template: DocumentTemplate): void {
+    const doc = this.store.create(template.title, template.content, template.category);
+    this.store.updateIcon(doc.id, template.icon);
+    this.isTemplatesOpen.set(false);
+    this.notifyUser(`Loaded "${template.title}" template!`);
   }
 
   protected setViewMode(mode: ViewMode): void {
@@ -534,7 +561,16 @@ export class Editor {
           event.preventDefault();
           this.toggleShortcuts();
           break;
+        case 'j':
+          event.preventDefault();
+          this.toggleTemplates();
+          break;
       }
+    } else if (event.key === 'Escape' && this.isZenMode()) {
+      this.isZenMode.set(false);
+    } else if (event.key === 'F11') {
+      event.preventDefault();
+      this.toggleZenMode();
     } else if (event.key === '?' && !['INPUT', 'TEXTAREA'].includes((event.target as HTMLElement).tagName)) {
       event.preventDefault();
       this.toggleShortcuts();

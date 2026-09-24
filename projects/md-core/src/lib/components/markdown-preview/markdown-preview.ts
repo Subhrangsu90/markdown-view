@@ -7,6 +7,7 @@ import {
   PLATFORM_ID,
   inject,
   HostListener,
+  effect,
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { MarkdownComponent } from 'ngx-markdown';
@@ -30,6 +31,16 @@ export class MarkdownPreview {
   readonly scrollEvent = output<Event>();
   readonly contentChange = output<string>();
   readonly documentNavigate = output<{ docId: string; title: string }>();
+
+  constructor() {
+    effect(() => {
+      // Re-run enhancements whenever document content updates
+      this.content();
+      if (this.isBrowser) {
+        setTimeout(() => this.onReady(), 50);
+      }
+    });
+  }
 
   @HostListener('scroll', ['$event'])
   onScroll(event: Event): void {
@@ -67,6 +78,7 @@ export class MarkdownPreview {
     this.enhanceCallouts();
     this.enhanceCheckboxes();
     this.enhanceLinksAndHeadings();
+    this.enhanceBadges();
     await this.enhanceMermaid();
     await this.enhanceMath();
   }
@@ -137,6 +149,68 @@ export class MarkdownPreview {
           console.warn(`[MarkdownView] Linked document not found in store: "${filePart}"`);
         }
       });
+    });
+  }
+
+  /**
+   * Enhances badge images (Shields.io, GitHub Actions, Codecov, etc.)
+   * Displays them as sleek inline rows rather than vertically stacked blocks with heavy margins.
+   */
+  private enhanceBadges(): void {
+    const container = this.previewContainer()?.nativeElement;
+    if (!container) return;
+
+    const paragraphs = container.querySelectorAll<HTMLElement>('p');
+    paragraphs.forEach((p) => {
+      const imgs = Array.from(p.querySelectorAll<HTMLImageElement>('img'));
+      if (imgs.length === 0) return;
+
+      const isBadgeContainer = imgs.some((img) => {
+        const src = img.getAttribute('src') || '';
+        const alt = img.getAttribute('alt') || '';
+        return (
+          /shields\.io|badge|badgen|codecov|travis-ci|circleci|workflows\/.*\/badge/i.test(src) ||
+          /license|build|test|coverage|version|npm|prs|stars|status|downloads/i.test(alt)
+        );
+      }) || (
+        p.childNodes.length > 0 &&
+        Array.from(p.childNodes).every((node) => {
+          if (node.nodeType === Node.TEXT_NODE) return !node.textContent?.trim();
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            const el = node as HTMLElement;
+            return el.tagName === 'BR' || el.tagName === 'IMG' || (el.tagName === 'A' && !!el.querySelector('img'));
+          }
+          return false;
+        }) &&
+        imgs.length >= 2
+      );
+
+      if (isBadgeContainer) {
+        p.classList.add('markdown-badge-row');
+        // Remove intervening <br> tags inserted by breaks: true
+        p.querySelectorAll('br').forEach((br) => br.remove());
+        imgs.forEach((img) => {
+          img.classList.add('markdown-badge');
+          const link = img.closest('a');
+          if (link) {
+            link.classList.add('markdown-badge-link');
+          }
+        });
+      } else {
+        // Also tag individual badge images in any paragraph so they don't render as giant blocks
+        imgs.forEach((img) => {
+          const src = img.getAttribute('src') || '';
+          const alt = img.getAttribute('alt') || '';
+          if (
+            /shields\.io|badge|badgen|codecov|travis-ci|circleci|workflows\/.*\/badge/i.test(src) ||
+            /license|build|test|coverage|version|npm|prs|stars|status|downloads/i.test(alt)
+          ) {
+            img.classList.add('markdown-badge');
+            const link = img.closest('a');
+            if (link) link.classList.add('markdown-badge-link');
+          }
+        });
+      }
     });
   }
 
@@ -337,7 +411,7 @@ export class MarkdownPreview {
   }
 
   /**
-   * Render KaTeX LaTeX math formulas
+   * Render KaTeX LaTeX math formulas (block $$, inline $, and code blocks)
    */
   private async enhanceMath(): Promise<void> {
     const container = this.previewContainer()?.nativeElement;
@@ -346,6 +420,9 @@ export class MarkdownPreview {
     try {
       const katexModule = await import('katex');
       const katex = katexModule.default ?? katexModule;
+      if (this.isBrowser) {
+        (window as any).katex = katex;
+      }
 
       // 1. Math code blocks (```math or ```latex)
       const mathCodes = container.querySelectorAll<HTMLElement>('code.language-math, code.language-latex');
@@ -364,8 +441,151 @@ export class MarkdownPreview {
           }
         }
       });
-    } catch {
-      // KaTeX failed to load dynamically
+
+      // 2. Block math ($$ ... $$)
+      const blockMathRegex = /\$\$([\s\S]+?)\$\$/g;
+      const blockCandidates = Array.from(
+        container.querySelectorAll<HTMLElement>('p, blockquote, li, td, th')
+      );
+
+      for (const el of blockCandidates) {
+        if (el.closest('.katex-block-wrapper, pre, code')) continue;
+        if (!el.innerHTML.includes('$$')) continue;
+
+        // Clean up <br> tags inserted by Markdown line-breaks and unescape HTML entities
+        const normalized = el.innerHTML
+          .replace(/<br\s*\/?>/gi, '\n')
+          .replace(/&amp;/g, '&')
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+          .replace(/&quot;/g, '"')
+          .replace(/&#39;/g, "'");
+
+        if (blockMathRegex.test(normalized)) {
+          blockMathRegex.lastIndex = 0;
+          let hasMatch = false;
+
+          const renderedHtml = normalized.replace(blockMathRegex, (match, formula) => {
+            const clean = formula.trim();
+            if (!clean) return match;
+            try {
+              hasMatch = true;
+              const rendered = katex.renderToString(clean, {
+                displayMode: true,
+                throwOnError: false,
+              });
+              return `<div class="katex-block-wrapper">${rendered}</div>`;
+            } catch {
+              return match;
+            }
+          });
+
+          if (hasMatch) {
+            const temp = document.createElement('div');
+            temp.innerHTML = renderedHtml;
+
+            // If the element only contained the math block, replace element itself
+            if (
+              temp.children.length === 1 &&
+              temp.firstElementChild?.classList.contains('katex-block-wrapper') &&
+              temp.textContent?.trim() === ''
+            ) {
+              el.replaceWith(temp.firstElementChild);
+            } else if (el.tagName.toLowerCase() === 'p') {
+              // Valid HTML: <p> cannot contain <div> in DOM, unwrap cleanly
+              el.replaceWith(...Array.from(temp.childNodes));
+            } else {
+              el.innerHTML = renderedHtml;
+            }
+          }
+        }
+      }
+
+      // 3. Inline math ($ ... $)
+      const inlineMathRegex = /(^|[^\\])\$([^\s\$](?:[^\$\n\r]*?[^\s\$])?)\$/g;
+
+      const walker = document.createTreeWalker(
+        container,
+        NodeFilter.SHOW_TEXT,
+        {
+          acceptNode(node) {
+            const parent = node.parentElement;
+            if (!parent) return NodeFilter.FILTER_REJECT;
+            const tag = parent.tagName.toLowerCase();
+            if (['pre', 'code', 'script', 'style', 'textarea', 'input'].includes(tag)) {
+              return NodeFilter.FILTER_REJECT;
+            }
+            if (parent.closest('.katex, .katex-block-wrapper, .mermaid-diagram-card')) {
+              return NodeFilter.FILTER_REJECT;
+            }
+            if (node.nodeValue && node.nodeValue.includes('$')) {
+              return NodeFilter.FILTER_ACCEPT;
+            }
+            return NodeFilter.FILTER_SKIP;
+          }
+        }
+      );
+
+      const replacements: { node: Text; fragment: DocumentFragment }[] = [];
+      let textNode = walker.nextNode() as Text | null;
+
+      while (textNode) {
+        const text = textNode.nodeValue || '';
+        if (text.includes('$')) {
+          inlineMathRegex.lastIndex = 0;
+          let match: RegExpExecArray | null;
+          let lastIndex = 0;
+          let hasInline = false;
+          const frag = document.createDocumentFragment();
+
+          while ((match = inlineMathRegex.exec(text)) !== null) {
+            const prefix = match[1];
+            const formula = match[2].trim();
+            const matchStart = match.index + prefix.length;
+            const matchEnd = match.index + match[0].length;
+
+            // Skip currency amounts like $10, $5.99, $1000
+            if (/^\d+(?:[.,]\d+)?(?:\s*(?:million|billion|k|m|usd))?$/i.test(formula)) {
+              continue;
+            }
+
+            hasInline = true;
+            if (matchStart > lastIndex) {
+              frag.appendChild(document.createTextNode(text.slice(lastIndex, match.index) + prefix));
+            } else if (prefix) {
+              frag.appendChild(document.createTextNode(prefix));
+            }
+
+            try {
+              const span = document.createElement('span');
+              span.className = 'katex-inline-wrapper';
+              span.innerHTML = katex.renderToString(formula, {
+                displayMode: false,
+                throwOnError: false,
+              });
+              frag.appendChild(span);
+            } catch {
+              frag.appendChild(document.createTextNode(`$${formula}$`));
+            }
+
+            lastIndex = matchEnd;
+          }
+
+          if (hasInline) {
+            if (lastIndex < text.length) {
+              frag.appendChild(document.createTextNode(text.slice(lastIndex)));
+            }
+            replacements.push({ node: textNode, fragment: frag });
+          }
+        }
+        textNode = walker.nextNode() as Text | null;
+      }
+
+      for (const { node, fragment } of replacements) {
+        node.parentNode?.replaceChild(fragment, node);
+      }
+    } catch (err) {
+      console.error('KaTeX rendering error:', err);
     }
   }
 }

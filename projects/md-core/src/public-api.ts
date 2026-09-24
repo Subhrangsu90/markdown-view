@@ -4,6 +4,7 @@
 
 // Models
 export * from './lib/models/document.model';
+export * from './lib/models/templates';
 
 // Services
 export * from './lib/services/document-store';

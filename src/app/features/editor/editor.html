@@ -1,5 +1,6 @@
 <div
   class="editor-shell"
+  [class.zen-active]="isZenMode()"
   (dragover)="onDragOver($event)"
   (dragleave)="onDragLeave($event)"
   (drop)="onDrop($event)"
@@ -13,6 +14,8 @@
   <app-sidebar
     [isOpen]="sidebarOpen()"
     (toggleSidebar)="toggleSidebar()"
+    (openTemplates)="toggleTemplates()"
+    (openAbout)="toggleAbout()"
   />
 
   <!-- Main Area -->
@@ -155,6 +158,45 @@
           title="Keyboard Shortcuts & Help (Ctrl+/)"
         >
           <md-icon name="help" [size]="16" />
+        </button>
+
+        <!-- Template Library trigger -->
+        <button
+          class="icon-btn action-tool-btn"
+          (click)="toggleTemplates()"
+          title="Template Library (Ctrl+J)"
+        >
+          <md-icon name="template" [size]="16" />
+        </button>
+
+        <!-- Focus / Zen Mode trigger -->
+        <button
+          class="icon-btn action-tool-btn"
+          [class.active]="isZenMode()"
+          (click)="toggleZenMode()"
+          title="Distraction-Free Focus Mode (F11)"
+        >
+          <md-icon [name]="isZenMode() ? 'minimize' : 'zen'" [size]="16" />
+        </button>
+
+        <!-- GitHub repository link -->
+        <a
+          href="https://github.com/Subhrangsu90/markdown-view"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="icon-btn action-tool-btn github-btn"
+          title="View Source & Star on GitHub"
+        >
+          <md-icon name="github" [size]="16" />
+        </a>
+
+        <!-- About Modal trigger -->
+        <button
+          class="icon-btn action-tool-btn"
+          (click)="toggleAbout()"
+          title="About MarkdownView (Open Source)"
+        >
+          <md-icon name="info" [size]="16" />
         </button>
 
         <!-- Theme Switcher from md-core library -->
@@ -365,6 +407,30 @@
   <!-- Shortcuts & Help Modal -->
   @if (isShortcutsOpen()) {
     <app-shortcuts-modal (close)="toggleShortcuts()" />
+  }
+
+  <!-- Templates Library Modal -->
+  @if (isTemplatesOpen()) {
+    <app-templates-modal
+      (close)="toggleTemplates()"
+      (selectTemplate)="onApplyTemplate($event)"
+    />
+  }
+
+  <!-- About & Open Source Modal -->
+  @if (isAboutOpen()) {
+    <app-about-modal
+      (close)="toggleAbout()"
+      (openShortcuts)="isAboutOpen.set(false); isShortcutsOpen.set(true)"
+    />
+  }
+
+  <!-- Zen Mode Floating Exit Pill -->
+  @if (isZenMode()) {
+    <button class="zen-exit-pill" (click)="toggleZenMode()" title="Exit Focus Mode (Esc or F11)">
+      <md-icon name="minimize" [size]="14" />
+      <span>Exit Focus Mode (Esc)</span>
+    </button>
   }
 
   <!-- Drag overlay -->
