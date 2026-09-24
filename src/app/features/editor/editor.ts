@@ -19,6 +19,7 @@ import {
   TableOfContents,
   TocHeading,
   FileExportService,
+  LocalDirectoryService,
   MdIcon,
   DOCUMENT_ICON_PALETTE,
   resolveIconName,
@@ -56,6 +57,7 @@ export class Editor {
   protected readonly store = inject(DocumentStore);
   protected readonly fileImport = inject(FileImportService);
   protected readonly fileExport = inject(FileExportService);
+  protected readonly localDir = inject(LocalDirectoryService);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly isBrowser = isPlatformBrowser(this.platformId);
 
@@ -388,6 +390,46 @@ export class Editor {
       this.isExportMenuOpen.set(false);
       this.notifyUser('Copied Markdown to clipboard!');
     });
+  }
+
+  /** Set or change the local computer folder location */
+  protected async connectLocalDirectory(): Promise<void> {
+    this.isExportMenuOpen.set(false);
+    const success = await this.localDir.connectDirectory();
+    if (success) {
+      this.notifyUser(`Save location set to: ${this.localDir.connectedDirectoryName()}`);
+    }
+  }
+
+  /** Save active document directly into the connected local folder */
+  protected async saveActiveToLocalDirectory(): Promise<void> {
+    const doc = this.store.activeDocument();
+    if (!doc) return;
+    this.isExportMenuOpen.set(false);
+    const success = await this.localDir.saveDocument(doc);
+    if (success) {
+      this.notifyUser(`Saved "${doc.title}" to local folder!`);
+    } else {
+      this.notifyUser('Failed to save to local folder. Please check permissions.');
+    }
+  }
+
+  /** Sync all documents to connected local folder */
+  protected async syncAllToLocalDirectory(): Promise<void> {
+    this.isExportMenuOpen.set(false);
+    const { count, errorCount } = await this.localDir.syncAllDocuments(this.store.documents());
+    if (errorCount === 0) {
+      this.notifyUser(`Synced all ${count} documents to local folder!`);
+    } else {
+      this.notifyUser(`Synced ${count} documents (${errorCount} failed).`);
+    }
+  }
+
+  /** Disconnect the connected local folder */
+  protected async disconnectLocalDirectory(): Promise<void> {
+    this.isExportMenuOpen.set(false);
+    await this.localDir.disconnectDirectory();
+    this.notifyUser('Disconnected local folder location.');
   }
 
   protected toggleExportMenu(): void {

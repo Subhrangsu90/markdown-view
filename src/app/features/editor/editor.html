@@ -179,6 +179,7 @@
 
             @if (isExportMenuOpen()) {
               <div class="export-menu">
+                <div class="menu-section-header">CURRENT DOCUMENT</div>
                 <button class="export-item" (click)="exportMarkdown()">
                   <md-icon name="file" [size]="14" />
                   <span>Download Markdown (.md)</span>
@@ -191,14 +192,40 @@
                   <md-icon name="pdf" [size]="14" />
                   <span>Print to PDF</span>
                 </button>
-                <button class="export-item" (click)="exportAllZip()">
-                  <md-icon name="zip" [size]="14" />
-                  <span>Export All as ZIP (.zip)</span>
-                </button>
-                <div class="menu-divider"></div>
                 <button class="export-item" (click)="copyMarkdown()">
                   <md-icon name="copy" [size]="14" />
                   <span>Copy Raw Markdown</span>
+                </button>
+
+                @if (localDir.isSupported()) {
+                  <div class="menu-divider"></div>
+                  <div class="menu-section-header">LOCAL SAVE LOCATION</div>
+                  @if (localDir.isConnected()) {
+                    <button class="export-item" (click)="saveActiveToLocalDirectory()">
+                      <md-icon name="hard-drive" [size]="14" />
+                      <span>Save to Local Folder ({{ localDir.connectedDirectoryName() }})</span>
+                    </button>
+                    <button class="export-item" (click)="syncAllToLocalDirectory()">
+                      <md-icon name="sync" [size]="14" [class.spinning]="localDir.isSyncing()" />
+                      <span>Sync All to Local Folder</span>
+                    </button>
+                    <button class="export-item danger-item" (click)="disconnectLocalDirectory()">
+                      <md-icon name="close" [size]="14" />
+                      <span>Disconnect Local Folder</span>
+                    </button>
+                  } @else {
+                    <button class="export-item" (click)="connectLocalDirectory()">
+                      <md-icon name="hard-drive" [size]="14" />
+                      <span>Set Local Folder Location...</span>
+                    </button>
+                  }
+                }
+
+                <div class="menu-divider"></div>
+                <div class="menu-section-header">BULK EXPORT</div>
+                <button class="export-item" (click)="exportAllZip()">
+                  <md-icon name="zip" [size]="14" />
+                  <span>Download All as ZIP (.zip)</span>
                 </button>
               </div>
             }

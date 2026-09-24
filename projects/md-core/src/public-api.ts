@@ -9,6 +9,7 @@ export * from './lib/models/document.model';
 export * from './lib/services/document-store';
 export * from './lib/services/file-import';
 export * from './lib/services/file-export';
+export * from './lib/services/local-directory.service';
 export * from './lib/services/markdown.config';
 export * from './lib/services/theme.service';
 

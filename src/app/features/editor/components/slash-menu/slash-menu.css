@@ -5,12 +5,11 @@
   max-height: 380px;
   display: flex;
   flex-direction: column;
-  background: var(--surface-card);
+  background: var(--surface-card, #202126) !important;
   border: 1px solid var(--border-strong);
-  border-radius: 10px;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45), 0 0 1px rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: var(--shadow-dropdown, 0 16px 40px rgba(0, 0, 0, 0.6));
   overflow: hidden;
-  backdrop-filter: blur(12px);
   animation: slashFadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
 }
 

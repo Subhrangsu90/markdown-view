@@ -12,7 +12,7 @@
 
   <!-- Search -->
   <div class="sidebar-search">
-    <md-icon name="search" [size]="14" className="search-icon" />
+    <md-icon name="search" [size]="14" class="search-icon" />
     <input
       type="text"
       class="search-input"
@@ -26,26 +26,129 @@
   <div class="sidebar-actions">
     <button class="action-btn primary" (click)="createDocument()">
       <md-icon name="plus" [size]="14" [strokeWidth]="2.5" />
-      New Page
+      <span>New Page</span>
     </button>
-    <div class="action-row">
+    <div class="action-toolbar">
       <button class="action-btn secondary" (click)="startCreateFolder()" title="Create New Folder">
         <md-icon name="folder-plus" [size]="13" />
-        + Folder
+        <span>+ Folder</span>
       </button>
-      <button class="action-btn secondary" (click)="importFiles()" title="Import Markdown files">
-        <md-icon name="file" [size]="13" />
-        File
-      </button>
-      <button class="action-btn secondary" (click)="importFolder()" title="Import entire folder directly">
-        <md-icon name="folder" [size]="13" />
-        Folder
-      </button>
-      <button class="action-btn secondary" (click)="exportAllZip()" title="Export all documents as ZIP archive">
-        <md-icon name="zip" [size]="13" />
-        ZIP
-      </button>
+
+      <!-- Import Dropdown -->
+      <div class="sidebar-menu-wrapper">
+        <button
+          class="action-btn secondary menu-trigger"
+          (click)="toggleImportMenu($event)"
+          title="Import documents or connect local folder"
+          [class.active]="isImportMenuOpen()"
+        >
+          <md-icon name="upload" [size]="13" />
+          <span>Import</span>
+          <md-icon name="chevron-down" [size]="9" />
+        </button>
+
+        @if (isImportMenuOpen()) {
+          <div class="sidebar-dropdown-menu">
+            <div class="menu-section-header">IMPORT OPTIONS</div>
+            <button class="menu-item-btn" (click)="importFiles()">
+              <md-icon name="file" [size]="13" />
+              <span>Import Files (.md)</span>
+            </button>
+            <button class="menu-item-btn" (click)="importFolder()">
+              <md-icon name="folder" [size]="13" />
+              <span>Import Folder</span>
+            </button>
+            @if (localDir.isSupported()) {
+              <div class="menu-divider"></div>
+              @if (!localDir.isConnected()) {
+                <button class="menu-item-btn" (click)="connectLocalFolder()">
+                  <md-icon name="hard-drive" [size]="13" />
+                  <span>Connect Local Folder...</span>
+                </button>
+              } @else {
+                <button class="menu-item-btn" (click)="importFromLocalFolder()">
+                  <md-icon name="sync" [size]="13" />
+                  <span>Reload from Local Folder</span>
+                </button>
+              }
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Export Dropdown -->
+      <div class="sidebar-menu-wrapper">
+        <button
+          class="action-btn secondary menu-trigger"
+          (click)="toggleExportMenu($event)"
+          title="Export documents or sync to local folder"
+          [class.active]="isExportMenuOpen()"
+        >
+          <md-icon name="download" [size]="13" />
+          <span>Export</span>
+          <md-icon name="chevron-down" [size]="9" />
+        </button>
+
+        @if (isExportMenuOpen()) {
+          <div class="sidebar-dropdown-menu">
+            <div class="menu-section-header">EXPORT OPTIONS</div>
+            <button class="menu-item-btn" (click)="exportAllZip()">
+              <md-icon name="zip" [size]="13" />
+              <span>Export All as ZIP (.zip)</span>
+            </button>
+            @if (localDir.isSupported()) {
+              <div class="menu-divider"></div>
+              @if (!localDir.isConnected()) {
+                <button class="menu-item-btn" (click)="connectLocalFolder()">
+                  <md-icon name="hard-drive" [size]="13" />
+                  <span>Set Local Save Location...</span>
+                </button>
+              } @else {
+                <button class="menu-item-btn" (click)="syncAllToLocalFolder()">
+                  <md-icon name="sync" [size]="13" [class.spinning]="localDir.isSyncing()" />
+                  <span>Sync All to Local Folder</span>
+                </button>
+                <button class="menu-item-btn danger-item" (click)="disconnectLocalFolder()">
+                  <md-icon name="close" [size]="13" />
+                  <span>Disconnect Local Folder</span>
+                </button>
+              }
+            }
+          </div>
+        }
+      </div>
     </div>
+
+    <!-- Connected Local Directory Badge -->
+    @if (localDir.isConnected()) {
+      <div class="connected-folder-card">
+        <div class="folder-card-meta">
+          <md-icon name="hard-drive" [size]="14" class="disk-icon" />
+          <div class="folder-card-text">
+            <span class="folder-label">SAVE LOCATION</span>
+            <span class="folder-name" [title]="localDir.connectedDirectoryName()">
+              {{ localDir.connectedDirectoryName() }}
+            </span>
+          </div>
+        </div>
+        <div class="folder-card-actions">
+          <button
+            class="folder-card-btn"
+            (click)="syncAllToLocalFolder()"
+            [title]="'Sync all documents to ' + localDir.connectedDirectoryName()"
+          >
+            <md-icon name="sync" [size]="12" [class.spinning]="localDir.isSyncing()" />
+          </button>
+          <button
+            class="folder-card-btn close"
+            (click)="disconnectLocalFolder()"
+            title="Disconnect local folder"
+          >
+            <md-icon name="close" [size]="12" />
+          </button>
+        </div>
+      </div>
+    }
   </div>
 
   <!-- Inline New Folder Creator -->

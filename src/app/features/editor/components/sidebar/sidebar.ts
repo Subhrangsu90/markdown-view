@@ -1,3 +1,4 @@
+// Sidebar component - Export & Location setup
 import {
   Component,
   inject,
@@ -13,8 +14,10 @@ import {
   DocumentStore,
   FileImportService,
   FileExportService,
+  LocalDirectoryService,
   TimeAgo,
   MarkdownDocument,
+  createDocument,
   MdIcon,
   DOCUMENT_ICON_PALETTE,
   resolveIconName,
@@ -35,12 +38,14 @@ export interface FolderGroup {
   host: {
     '[class.open]': 'isOpen()',
     '(window:keydown.escape)': 'onEscape()',
+    '(document:click)': 'onDocumentClick($event)',
   },
 })
 export class Sidebar {
   protected readonly store = inject(DocumentStore);
   protected readonly fileImport = inject(FileImportService);
   protected readonly fileExport = inject(FileExportService);
+  protected readonly localDir = inject(LocalDirectoryService);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly isBrowser = isPlatformBrowser(this.platformId);
 
@@ -48,6 +53,10 @@ export class Sidebar {
   readonly toggleSidebar = output<void>();
 
   protected readonly searchQuery = signal('');
+
+  // Dropdown menus in sidebar action toolbar
+  protected readonly isImportMenuOpen = signal<boolean>(false);
+  protected readonly isExportMenuOpen = signal<boolean>(false);
 
   // Multi-selection state
   protected readonly selectedDocIds = signal<Set<string>>(new Set());
@@ -138,16 +147,6 @@ export class Sidebar {
     }
     return ids;
   });
-
-  protected onEscape(): void {
-    if (this.isBatchMoveOpen()) {
-      this.isBatchMoveOpen.set(false);
-      return;
-    }
-    if (this.selectedDocIds().size > 0) {
-      this.clearSelection();
-    }
-  }
 
   protected handleDocClick(event: MouseEvent, docId: string): void {
     if (event.ctrlKey || event.metaKey) {
@@ -246,6 +245,100 @@ export class Sidebar {
     const docs = this.store.documents().filter((d) => ids.has(d.id));
     if (docs.length === 0) return;
     await this.fileExport.exportAllAsZip(docs, `selection-${docs.length}-documents.zip`);
+  }
+
+  // Action Toolbar Dropdown Handlers
+  protected toggleImportMenu(event?: Event): void {
+    if (event) event.stopPropagation();
+    this.isExportMenuOpen.set(false);
+    this.isImportMenuOpen.update((v) => !v);
+  }
+
+  protected toggleExportMenu(event?: Event): void {
+    if (event) event.stopPropagation();
+    this.isImportMenuOpen.set(false);
+    this.isExportMenuOpen.update((v) => !v);
+  }
+
+  protected closeSidebarMenus(): void {
+    this.isImportMenuOpen.set(false);
+    this.isExportMenuOpen.set(false);
+  }
+
+  protected onDocumentClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.sidebar-menu-wrapper')) {
+      this.closeSidebarMenus();
+    }
+    if (!target.closest('.batch-move-wrapper')) {
+      this.isBatchMoveOpen.set(false);
+    }
+  }
+
+  protected onEscape(): void {
+    if (this.isImportMenuOpen() || this.isExportMenuOpen()) {
+      this.closeSidebarMenus();
+      return;
+    }
+    if (this.isBatchMoveOpen()) {
+      this.isBatchMoveOpen.set(false);
+      return;
+    }
+    if (this.selectedDocIds().size > 0) {
+      this.clearSelection();
+      return;
+    }
+    if (this.isCreatingFolder()) {
+      this.cancelCreateFolder();
+      return;
+    }
+    if (this.editingFolder()) {
+      this.cancelRenameFolder();
+      return;
+    }
+  }
+
+  // Import Actions
+  protected async importFiles(): Promise<void> {
+    this.closeSidebarMenus();
+    await this.fileImport.importFiles();
+  }
+
+  protected async importFolder(): Promise<void> {
+    this.closeSidebarMenus();
+    await this.fileImport.importFolder();
+  }
+
+  protected async connectLocalFolder(): Promise<void> {
+    this.closeSidebarMenus();
+    await this.localDir.connectDirectory();
+  }
+
+  protected async importFromLocalFolder(): Promise<void> {
+    this.closeSidebarMenus();
+    const imported = await this.localDir.importFromConnectedDirectory();
+    if (imported.length > 0) {
+      const docs = imported.map((item) =>
+        createDocument(item.title, item.content, item.folder),
+      );
+      this.store.addDocuments(docs);
+    }
+  }
+
+  // Export Actions
+  protected async exportAllZip(): Promise<void> {
+    this.closeSidebarMenus();
+    await this.fileExport.exportAllAsZip(this.store.documents());
+  }
+
+  protected async syncAllToLocalFolder(): Promise<void> {
+    this.closeSidebarMenus();
+    await this.localDir.syncAllDocuments(this.store.documents());
+  }
+
+  protected async disconnectLocalFolder(): Promise<void> {
+    this.closeSidebarMenus();
+    await this.localDir.disconnectDirectory();
   }
 
   protected createDocument(folder?: string): void {
@@ -360,18 +453,6 @@ export class Sidebar {
   protected async exportFolder(event: Event, folderName: string): Promise<void> {
     event.stopPropagation();
     await this.fileExport.exportFolderAsZip(folderName, this.store.documents());
-  }
-
-  protected async exportAllZip(): Promise<void> {
-    await this.fileExport.exportAllAsZip(this.store.documents());
-  }
-
-  protected async importFiles(): Promise<void> {
-    await this.fileImport.importFiles();
-  }
-
-  protected async importFolder(): Promise<void> {
-    await this.fileImport.importFolder();
   }
 
   // Document Drag & Drop Handlers

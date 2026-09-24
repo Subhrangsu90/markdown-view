@@ -5,19 +5,27 @@
 .dark {
   color-scheme: dark;
 
-  /* Surfaces (Authentic Notion Deep Charcoal) */
-  --surface-base: #191919;
-  --surface-sidebar: #202020;
-  --surface-elevated: #262626;
-  --surface-inset: #141414;
-  --surface-hover: rgba(255, 255, 255, 0.055);
-  --surface-active: rgba(255, 255, 255, 0.09);
-  --surface-code: #1c1c1c;
+  /* Surfaces (Rich Charcoal / Slate System with Distinct Depth) */
+  --surface-base: #141416;
+  --surface-sidebar: #1b1b1e;
+  --surface-elevated: #24252a;
+  --surface-card: #202126;
+  --surface-modal: #202126;
+  --surface-floating: #25262c;
+  --surface-inset: #111215;
+  --surface-hover: rgba(255, 255, 255, 0.06);
+  --surface-active: rgba(255, 255, 255, 0.095);
+  --surface-code: #18191c;
 
-  /* Text (Balanced High-Contrast Charcoal Off-White) */
-  --text-primary: #ebebeb;
-  --text-secondary: #9b9b9b;
-  --text-tertiary: #656565;
+  /* Modal Backdrop & Overlays */
+  --backdrop-bg: rgba(0, 0, 0, 0.75);
+  --backdrop-blur: 8px;
+
+  /* Text (Balanced High-Contrast Off-White) */
+  --text-primary: #f0f1f4;
+  --text-secondary: #9da1aa;
+  --text-tertiary: #6b707d;
+  --text-muted: #6b707d;
 
   /* Accent (Notion Refined Steel Blue) */
   --accent: #2383e2;
@@ -26,11 +34,14 @@
   --accent-light: #52a2eb;
 
   /* Borders & Shadows */
-  --border: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.15);
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.18);
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.45);
   --shadow-md: 0 4px 18px rgba(0, 0, 0, 0.5);
-  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.65);
+  --shadow-modal: 0 24px 64px -12px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.1);
+  --shadow-dropdown: 0 16px 40px -8px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1);
 
   /* Code & Syntax */
   --code-inline-bg: rgba(255, 255, 255, 0.08);
@@ -42,19 +53,27 @@
 .light {
   color-scheme: light;
 
-  /* Surfaces (Authentic Notion Warm Gray & Clean Paper) */
+  /* Surfaces (Warm Gray & Crisp Paper) */
   --surface-base: #ffffff;
-  --surface-sidebar: #f7f7f5;
+  --surface-sidebar: #f7f7f8;
   --surface-elevated: #ffffff;
-  --surface-inset: #efefec;
-  --surface-hover: rgba(55, 53, 47, 0.06);
-  --surface-active: rgba(55, 53, 47, 0.09);
-  --surface-code: #f7f6f3;
+  --surface-card: #ffffff;
+  --surface-modal: #ffffff;
+  --surface-floating: #ffffff;
+  --surface-inset: #f1f2f4;
+  --surface-hover: rgba(0, 0, 0, 0.05);
+  --surface-active: rgba(0, 0, 0, 0.08);
+  --surface-code: #f6f7f9;
 
-  /* Text (Notion Signature Charcoal Gray) */
-  --text-primary: #37352f;
-  --text-secondary: #787774;
-  --text-tertiary: #9b9a97;
+  /* Modal Backdrop & Overlays */
+  --backdrop-bg: rgba(15, 23, 42, 0.45);
+  --backdrop-blur: 8px;
+
+  /* Text (Signature Charcoal Gray) */
+  --text-primary: #18181b;
+  --text-secondary: #52525b;
+  --text-tertiary: #71717a;
+  --text-muted: #71717a;
 
   /* Accent (Notion Refined Blue) */
   --accent: #2383e2;
@@ -63,11 +82,14 @@
   --accent-light: #2383e2;
 
   /* Borders & Shadows */
-  --border: rgba(55, 53, 47, 0.09);
-  --border-strong: rgba(55, 53, 47, 0.16);
+  --border-subtle: rgba(0, 0, 0, 0.05);
+  --border: rgba(0, 0, 0, 0.09);
+  --border-strong: rgba(0, 0, 0, 0.16);
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
   --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.12);
+  --shadow-modal: 0 24px 60px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.08);
+  --shadow-dropdown: 0 16px 36px -8px rgba(0, 0, 0, 0.16), 0 0 0 1px rgba(0, 0, 0, 0.06);
 
   /* Code & Syntax */
   --code-inline-bg: rgba(55, 53, 47, 0.06);
