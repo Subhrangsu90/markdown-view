@@ -58,6 +58,15 @@ export class Sidebar {
   protected readonly isImportMenuOpen = signal<boolean>(false);
   protected readonly isExportMenuOpen = signal<boolean>(false);
 
+  // Delete confirmation state
+  protected readonly pendingDeleteId = signal<string | null>(null);
+  protected readonly pendingDeleteTitle = computed(() => {
+    const id = this.pendingDeleteId();
+    if (!id) return '';
+    const doc = this.store.documents().find(d => d.id === id);
+    return doc?.title || 'Untitled';
+  });
+
   // Multi-selection state
   protected readonly selectedDocIds = signal<Set<string>>(new Set());
   protected readonly lastSelectedId = signal<string | null>(null);
@@ -276,6 +285,10 @@ export class Sidebar {
   }
 
   protected onEscape(): void {
+    if (this.pendingDeleteId()) {
+      this.cancelDelete();
+      return;
+    }
     if (this.isImportMenuOpen() || this.isExportMenuOpen()) {
       this.closeSidebarMenus();
       return;
@@ -357,7 +370,19 @@ export class Sidebar {
 
   protected deleteDocument(event: Event, id: string): void {
     event.stopPropagation();
-    this.store.delete(id);
+    this.pendingDeleteId.set(id);
+  }
+
+  protected confirmDelete(): void {
+    const id = this.pendingDeleteId();
+    if (id) {
+      this.store.delete(id);
+    }
+    this.pendingDeleteId.set(null);
+  }
+
+  protected cancelDelete(): void {
+    this.pendingDeleteId.set(null);
   }
 
   protected toggleFavorite(event: Event, id: string): void {

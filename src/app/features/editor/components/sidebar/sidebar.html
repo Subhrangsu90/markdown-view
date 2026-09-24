@@ -48,7 +48,7 @@
         </button>
 
         @if (isImportMenuOpen()) {
-          <div class="sidebar-dropdown-menu">
+          <div class="sidebar-dropdown-menu import-menu">
             <div class="menu-section-header">IMPORT OPTIONS</div>
             <button class="menu-item-btn" (click)="importFiles()">
               <md-icon name="file" [size]="13" />
@@ -90,7 +90,7 @@
         </button>
 
         @if (isExportMenuOpen()) {
-          <div class="sidebar-dropdown-menu">
+          <div class="sidebar-dropdown-menu export-menu">
             <div class="menu-section-header">EXPORT OPTIONS</div>
             <button class="menu-item-btn" (click)="exportAllZip()">
               <md-icon name="zip" [size]="13" />
@@ -603,4 +603,23 @@
   <div class="sidebar-footer">
     <span class="doc-count">{{ store.documents().length }} documents</span>
   </div>
+  <!-- Delete Confirmation Popup -->
+  @if (pendingDeleteId()) {
+    <div class="delete-overlay" (click)="cancelDelete()">
+      <div class="delete-dialog" (click)="$event.stopPropagation()">
+        <div class="delete-dialog-icon">
+          <md-icon name="delete" [size]="24" />
+        </div>
+        <h3 class="delete-dialog-title">Delete Document</h3>
+        <p class="delete-dialog-message">
+          Are you sure you want to delete <strong>"{{ pendingDeleteTitle() }}"</strong>? This action cannot be undone.
+        </p>
+        <div class="delete-dialog-actions">
+          <button class="delete-dialog-btn cancel" (click)="cancelDelete()">Cancel</button>
+          <button class="delete-dialog-btn confirm" (click)="confirmDelete()">Delete</button>
+        </div>
+      </div>
+    </div>
+  }
+
 </aside>

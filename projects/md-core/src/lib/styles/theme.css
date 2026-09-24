@@ -27,11 +27,11 @@
   --text-tertiary: #6b707d;
   --text-muted: #6b707d;
 
-  /* Accent (Notion Refined Steel Blue) */
-  --accent: #2383e2;
-  --accent-hover: #1d72c5;
-  --accent-dim: rgba(35, 131, 226, 0.18);
-  --accent-light: #52a2eb;
+  /* Accent (Cyan / Teal) */
+  --accent: #06b6d4;
+  --accent-hover: #0891b2;
+  --accent-dim: rgba(6, 182, 212, 0.18);
+  --accent-light: #22d3ee;
 
   /* Borders & Shadows */
   --border-subtle: rgba(255, 255, 255, 0.06);
@@ -75,11 +75,11 @@
   --text-tertiary: #71717a;
   --text-muted: #71717a;
 
-  /* Accent (Notion Refined Blue) */
-  --accent: #2383e2;
-  --accent-hover: #1d72c5;
-  --accent-dim: rgba(35, 131, 226, 0.12);
-  --accent-light: #2383e2;
+  /* Accent (Cyan / Teal) */
+  --accent: #0891b2;
+  --accent-hover: #0e7490;
+  --accent-dim: rgba(8, 145, 178, 0.12);
+  --accent-light: #06b6d4;
 
   /* Borders & Shadows */
   --border-subtle: rgba(0, 0, 0, 0.05);

@@ -35,23 +35,23 @@
   position: relative;
 }
 
-/* Top Bar */
+/* Top Bar (Compact & Sleek File Naming Bar) */
 .top-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 48px;
-  padding: 0 16px;
+  height: 38px;
+  padding: 0 12px;
   background: var(--surface-base);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--border-subtle, var(--border));
   flex-shrink: 0;
-  gap: 12px;
+  gap: 10px;
 }
 
 .top-bar-left {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex: 1;
   min-width: 0;
 }
@@ -59,7 +59,7 @@
 .doc-header-info {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   min-width: 0;
   flex: 1;
   max-width: 380px;
@@ -69,13 +69,13 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  font-size: 16px;
+  width: 24px;
+  height: 24px;
+  font-size: 14px;
   line-height: 1;
   background: transparent;
   border: 1px solid transparent;
-  border-radius: 6px;
+  border-radius: 5px;
   cursor: pointer;
   flex-shrink: 0;
   transition: all 0.15s ease;
@@ -84,24 +84,26 @@
 .doc-emoji-btn:hover {
   background: var(--surface-hover);
   border-color: var(--border);
-  transform: scale(1.1);
+  transform: scale(1.08);
 }
 
 .title-input {
   background: transparent;
   border: none;
   color: var(--text-primary);
-  font-size: 14.5px;
+  font-size: 13.5px;
   font-weight: 600;
   font-family: inherit;
   outline: none;
-  padding: 4px 8px;
+  padding: 2px 6px;
   border-radius: 4px;
   width: 100%;
-  transition: background 0.2s ease;
+  height: 26px;
+  transition: background 0.15s ease;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  letter-spacing: -0.01em;
 }
 
 .title-input:hover {
@@ -126,13 +128,14 @@
 .folder-pill-btn {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 3px 8px;
+  gap: 4px;
+  padding: 2px 7px;
+  height: 22px;
   background: var(--surface-inset);
-  border: 1px solid var(--border);
-  border-radius: 12px;
+  border: 1px solid var(--border-subtle, var(--border));
+  border-radius: 11px;
   color: var(--text-secondary);
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 500;
   font-family: inherit;
   cursor: pointer;
@@ -275,13 +278,16 @@
 
 /* Stats Badge */
 .stats-badge {
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 500;
   color: var(--text-tertiary);
-  padding: 3px 8px;
+  padding: 2px 7px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
   background: var(--surface-hover);
-  border: 1px solid var(--border);
-  border-radius: 6px;
+  border: 1px solid var(--border-subtle, var(--border));
+  border-radius: 5px;
   white-space: nowrap;
 }
 
@@ -292,14 +298,14 @@
 
 .export-btn {
   width: auto !important;
-  gap: 6px;
-  padding: 0 10px !important;
-  font-size: 12.5px;
+  gap: 5px;
+  padding: 0 8px !important;
+  font-size: 11.5px;
   font-weight: 500;
   color: var(--text-secondary);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  height: 32px;
+  border: 1px solid var(--border-subtle, var(--border));
+  border-radius: 5px;
+  height: 26px;
 }
 
 .export-btn:hover {
@@ -394,11 +400,11 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 26px;
+  height: 26px;
   padding: 0;
   border: none;
-  border-radius: 6px;
+  border-radius: 5px;
   background: transparent;
   color: var(--text-secondary);
   cursor: pointer;
@@ -416,27 +422,27 @@
 .mode-switcher {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 1px;
   background: var(--surface-inset);
-  border-radius: 8px;
-  padding: 3px;
-  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 2px;
+  border: 1px solid var(--border-subtle, var(--border));
 }
 
 .mode-btn {
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 5px 11px;
+  gap: 4px;
+  padding: 3px 9px;
   border: none;
-  border-radius: 6px;
+  border-radius: 4px;
   background: transparent;
   color: var(--text-tertiary);
   cursor: pointer;
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 500;
   font-family: inherit;
-  transition: all 0.2s ease;
+  transition: all 0.16s ease;
   white-space: nowrap;
   -webkit-tap-highlight-color: transparent;
 }

@@ -107,7 +107,7 @@
   text-decoration-color: var(--accent);
   background: var(--surface-active);
   border-radius: 3px;
-  padding: 0 3px;
+
 }
 
 /* ===== LISTS (Fix for Tailwind Reset) ===== */
@@ -564,4 +564,3 @@
   font-size: 1.1em;
   text-rendering: auto;
 }
-
