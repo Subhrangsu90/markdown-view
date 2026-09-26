@@ -102,6 +102,7 @@ export class Editor {
   protected readonly isDragOver = signal(false);
   protected readonly toolbarAction = signal<ToolbarAction | null>(null);
   protected readonly isExportMenuOpen = signal(false);
+  protected readonly isMoreMenuOpen = signal(false);
   protected readonly isFolderMenuOpen = signal(false);
   protected readonly headerNewFolderInput = signal('');
   protected readonly copySuccessMessage = signal<string | null>(null);
@@ -781,14 +782,40 @@ export class Editor {
     this.notifyUser('Disconnected local folder location.');
   }
 
-  protected toggleExportMenu(): void {
+  protected toggleExportMenu(event: MouseEvent): void {
+    event.stopPropagation();
     this.isExportMenuOpen.update((v) => !v);
+    this.isFolderMenuOpen.set(false);
+    this.isMoreMenuOpen.set(false);
+  }
+
+  protected toggleMoreMenu(event: MouseEvent): void {
+    event.stopPropagation();
+    this.isMoreMenuOpen.update((v) => !v);
+    this.isExportMenuOpen.set(false);
     this.isFolderMenuOpen.set(false);
   }
 
-  protected toggleFolderMenu(): void {
+  protected toggleFolderMenu(event: MouseEvent): void {
+    event.stopPropagation();
     this.isFolderMenuOpen.update((v) => !v);
     this.isExportMenuOpen.set(false);
+    this.isMoreMenuOpen.set(false);
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement | null;
+    if (!target) return;
+    if (!target.closest('.export-dropdown-wrapper')) {
+      this.isExportMenuOpen.set(false);
+    }
+    if (!target.closest('.more-dropdown-wrapper')) {
+      this.isMoreMenuOpen.set(false);
+    }
+    if (!target.closest('.folder-selector-wrapper')) {
+      this.isFolderMenuOpen.set(false);
+    }
   }
 
   protected moveToFolder(docId: string, folder: string | null): void {

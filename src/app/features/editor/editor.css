@@ -263,17 +263,120 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 6px;
+  gap: 5px;
+  /* overflow: hidden; */
+  min-width: 0;
+}
+
+/* Categorized Action Clusters */
+.action-cluster {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--surface-card, rgba(255, 255, 255, 0.03));
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+  border-radius: 7px;
+  padding: 2px 3px;
+}
+
+.cluster-divider {
+  width: 1px;
+  height: 16px;
+  background: var(--border, rgba(255, 255, 255, 0.12));
+  margin: 0 1px;
+  flex-shrink: 0;
 }
 
 .action-tool-btn {
   border: 1px solid transparent;
+  border-radius: 5px;
 }
 
 .action-tool-btn.active {
   background: var(--surface-active);
   color: var(--accent);
   border-color: var(--accent-dim);
+}
+
+.action-tool-btn.locked-active {
+  color: #f59e0b;
+}
+
+/* More Dropdown Menu */
+.more-dropdown-wrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+.more-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  width: 215px;
+  background: var(--surface-card, #202126) !important;
+  border: 1px solid var(--border-strong, rgba(255, 255, 255, 0.15));
+  border-radius: 10px;
+  box-shadow: var(--shadow-dropdown, 0 16px 40px rgba(0, 0, 0, 0.6));
+  padding: 5px;
+  z-index: 100;
+  animation: fadeIn 0.12s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.more-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 9px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-family: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.more-menu-item:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+.more-menu-item kbd {
+  margin-left: auto;
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--surface-inset, rgba(0, 0, 0, 0.2));
+  color: var(--text-tertiary);
+  border: 1px solid var(--border-subtle);
+  font-family: monospace;
+}
+
+.more-menu-item .ext-icon {
+  margin-left: auto;
+  opacity: 0.6;
+}
+
+.more-menu-divider {
+  height: 1px;
+  background: var(--border-subtle, rgba(255, 255, 255, 0.08));
+  margin: 3px 6px;
+}
+
+.more-menu-section-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+  padding: 6px 9px 2px;
 }
 
 .ai-tool-btn {
@@ -413,8 +516,13 @@
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Icon Buttons */
@@ -518,6 +626,7 @@
     transform: translateX(100%);
     opacity: 0;
   }
+
   to {
     transform: translateX(0);
     opacity: 1;
@@ -663,8 +772,13 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideUp {
@@ -672,6 +786,7 @@
     opacity: 0;
     transform: translateY(12px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -680,6 +795,7 @@
 
 /* ===== Print to PDF Styles ===== */
 @media print {
+
   .sidebar,
   .top-bar,
   md-toolbar,
@@ -713,7 +829,7 @@
   }
 
   .top-bar-right {
-    gap: 4px;
+    gap: 3px;
   }
 
   .title-input {
@@ -739,6 +855,11 @@
   .mode-btn {
     padding: 4px 8px;
     font-size: 11px;
+  }
+
+  .action-cluster {
+    padding: 2px 2px;
+    gap: 1px;
   }
 
   .toc-drawer {
@@ -768,6 +889,28 @@
   }
 }
 
+/* ≤600px: hide document-tools cluster (TOC/History/Lock) and view cluster (Graph/Zen)
+   — they remain accessible via the More (...) menu */
+@media (max-width: 600px) {
+
+  .action-cluster-doc,
+  .action-cluster-view {
+    display: none;
+  }
+
+  .cluster-divider:not(:last-of-type) {
+    display: none;
+  }
+
+  .folder-pill-btn .folder-pill-label {
+    display: none;
+  }
+
+  .folder-pill-btn {
+    padding: 2px 5px;
+  }
+}
+
 @media (max-width: 480px) {
   .mode-label {
     display: none;
@@ -778,8 +921,26 @@
   }
 
   .title-input {
-    max-width: 100px;
+    max-width: 90px;
     font-size: 12.5px;
+  }
+
+  .doc-header-info {
+    max-width: 180px;
+  }
+
+  /* Only keep AI-cluster & Settings-cluster visible at very small screens */
+  .action-cluster-doc,
+  .action-cluster-view {
+    display: none;
+  }
+
+  .cluster-divider {
+    display: none;
+  }
+
+  .top-bar-center {
+    display: none;
   }
 }
 

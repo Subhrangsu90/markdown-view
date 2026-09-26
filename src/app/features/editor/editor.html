@@ -50,7 +50,7 @@
             <div class="folder-selector-wrapper">
               <button
                 class="folder-pill-btn"
-                (click)="toggleFolderMenu()"
+                (click)="toggleFolderMenu($event)"
                 [title]="doc.folder ? 'Folder: ' + doc.folder + ' (click to change)' : 'Click to assign to a folder'"
               >
                 <md-icon name="folder" [size]="12" />
@@ -134,129 +134,217 @@
       </div>
 
       <div class="top-bar-right">
-        <!-- AI Assistant trigger (On-Device WebGPU & Cloud) -->
-        <button
-          class="icon-btn action-tool-btn ai-tool-btn"
-          [class.active]="isAiModalOpen()"
-          (click)="openAi()"
-          title="AI Assistant: On-Device WebGPU / Cloud / Ollama (Ctrl+Shift+A)"
-        >
-          <md-icon name="sparkles" [size]="16" />
-        </button>
+        <!-- Cluster 1: AI & Command Tools -->
+        <div class="action-cluster" title="AI & Search Tools">
+          <!-- AI Assistant trigger (On-Device WebGPU & Cloud) -->
+          <button
+            class="icon-btn action-tool-btn ai-tool-btn"
+            [class.active]="isAiModalOpen()"
+            (click)="openAi()"
+            title="AI Assistant: On-Device WebGPU / Cloud (Ctrl+Shift+A)"
+          >
+            <md-icon name="sparkles" [size]="15" />
+          </button>
 
-        <!-- Universal Command Palette trigger -->
-        <button
-          class="icon-btn action-tool-btn"
-          [class.active]="isCommandPaletteOpen()"
-          (click)="toggleCommandPalette()"
-          title="Command Palette (Ctrl+K)"
-        >
-          <md-icon name="command" [size]="16" />
-        </button>
-
-        <!-- Interactive Knowledge Graph trigger -->
-        <button
-          class="icon-btn action-tool-btn"
-          [class.active]="isGraphOpen()"
-          (click)="toggleGraph()"
-          title="Knowledge Graph (Ctrl+G)"
-        >
-          <md-icon name="graph" [size]="16" />
-        </button>
-
-        <!-- Document Revision History trigger -->
-        <button
-          class="icon-btn action-tool-btn"
-          [class.active]="isHistoryOpen()"
-          (click)="toggleHistory()"
-          title="Document History & Snapshots (Ctrl+H)"
-        >
-          <md-icon name="history" [size]="16" />
-        </button>
-
-        <!-- Vault Encrypt / Lock trigger -->
-        @if (store.activeDocument(); as activeDoc) {
+          <!-- Universal Command Palette trigger -->
           <button
             class="icon-btn action-tool-btn"
-            [class.active]="isEncryptModalOpen()"
-            [class.locked-active]="activeDoc.isLocked"
-            (click)="toggleEncryptModal()"
-            [title]="activeDoc.isLocked ? 'Document Locked (AES-256) - Click to Unlock' : 'Lock / Encrypt Document (Ctrl+L)'"
+            [class.active]="isCommandPaletteOpen()"
+            (click)="toggleCommandPalette()"
+            title="Command Palette (Ctrl+K)"
           >
-            <md-icon [name]="activeDoc.isLocked ? 'lock' : 'unlock'" [size]="16" />
+            <md-icon name="command" [size]="15" />
           </button>
-        }
 
-        <!-- Find & Replace trigger -->
-        <button
-          class="icon-btn action-tool-btn"
-          [class.active]="isFindOpen()"
-          (click)="toggleFind()"
-          title="Find & Replace (Ctrl+F)"
-        >
-          <md-icon name="search" [size]="16" />
-        </button>
+          <!-- Find & Replace trigger -->
+          <button
+            class="icon-btn action-tool-btn"
+            [class.active]="isFindOpen()"
+            (click)="toggleFind()"
+            title="Find & Replace (Ctrl+F)"
+          >
+            <md-icon name="search" [size]="15" />
+          </button>
+        </div>
 
-        <!-- Document Outline (TOC) trigger -->
-        <button
-          class="icon-btn action-tool-btn"
-          [class.active]="isTocOpen()"
-          (click)="toggleToc()"
-          title="Document Outline (Ctrl+O)"
-        >
-          <md-icon name="toc" [size]="16" />
-        </button>
+        <div class="cluster-divider"></div>
 
-        <!-- Help & Shortcuts trigger -->
-        <button
-          class="icon-btn action-tool-btn"
-          (click)="toggleShortcuts()"
-          title="Keyboard Shortcuts & Help (Ctrl+/)"
-        >
-          <md-icon name="help" [size]="16" />
-        </button>
+        <!-- Cluster 2: Document Navigation & Security -->
+        <div class="action-cluster action-cluster-doc" title="Document Tools">
+          <!-- Document Outline (TOC) trigger -->
+          <button
+            class="icon-btn action-tool-btn"
+            [class.active]="isTocOpen()"
+            (click)="toggleToc()"
+            title="Document Outline (Ctrl+O)"
+          >
+            <md-icon name="toc" [size]="15" />
+          </button>
 
-        <!-- Template Library trigger -->
-        <button
-          class="icon-btn action-tool-btn"
-          (click)="toggleTemplates()"
-          title="Template Library (Ctrl+J)"
-        >
-          <md-icon name="template" [size]="16" />
-        </button>
+          <!-- Document Revision History trigger -->
+          <button
+            class="icon-btn action-tool-btn"
+            [class.active]="isHistoryOpen()"
+            (click)="toggleHistory()"
+            title="Document History & Snapshots (Ctrl+H)"
+          >
+            <md-icon name="history" [size]="15" />
+          </button>
 
-        <!-- Focus / Zen Mode trigger -->
-        <button
-          class="icon-btn action-tool-btn"
-          [class.active]="isZenMode()"
-          (click)="toggleZenMode()"
-          title="Distraction-Free Focus Mode (F11)"
-        >
-          <md-icon [name]="isZenMode() ? 'minimize' : 'zen'" [size]="16" />
-        </button>
+          <!-- Vault Encrypt / Lock trigger -->
+          @if (store.activeDocument(); as activeDoc) {
+            <button
+              class="icon-btn action-tool-btn"
+              [class.active]="isEncryptModalOpen()"
+              [class.locked-active]="activeDoc.isLocked"
+              (click)="toggleEncryptModal()"
+              [title]="activeDoc.isLocked ? 'Document Locked (AES-256) - Click to Unlock' : 'Lock / Encrypt Document (Ctrl+L)'"
+            >
+              <md-icon [name]="activeDoc.isLocked ? 'lock' : 'unlock'" [size]="15" />
+            </button>
+          }
+        </div>
 
-        <!-- GitHub repository link -->
-        <a
-          href="https://github.com/Subhrangsu90/markdown-view"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="icon-btn action-tool-btn github-btn"
-          title="View Source & Star on GitHub"
-        >
-          <md-icon name="github" [size]="16" />
-        </a>
+        <div class="cluster-divider"></div>
 
-        <!-- About Modal trigger -->
-        <button
-          class="icon-btn action-tool-btn"
-          (click)="toggleAbout()"
-          title="About MarkdownView (Open Source)"
-        >
-          <md-icon name="info" [size]="16" />
-        </button>
+        <!-- Cluster 3: View Modes & Knowledge Graph -->
+        <div class="action-cluster action-cluster-view" title="Views & Focus">
+          <!-- Interactive Knowledge Graph trigger -->
+          <button
+            class="icon-btn action-tool-btn"
+            [class.active]="isGraphOpen()"
+            (click)="toggleGraph()"
+            title="Knowledge Graph (Ctrl+G)"
+          >
+            <md-icon name="graph" [size]="15" />
+          </button>
 
-        <!-- Theme Switcher from md-core library -->
-        <md-theme-toggle />
+          <!-- Focus / Zen Mode trigger -->
+          <button
+            class="icon-btn action-tool-btn"
+            [class.active]="isZenMode()"
+            (click)="toggleZenMode()"
+            title="Distraction-Free Focus Mode (F11)"
+          >
+            <md-icon [name]="isZenMode() ? 'minimize' : 'zen'" [size]="15" />
+          </button>
+        </div>
+
+        <div class="cluster-divider"></div>
+
+        <!-- Cluster 4: App Utilities & More -->
+        <div class="action-cluster" title="Settings & Utilities">
+          <!-- Theme Switcher from md-core library -->
+          <md-theme-toggle />
+
+          <!-- More (...) Menu Dropdown for secondary tools -->
+          <div class="more-dropdown-wrapper">
+            <button
+              class="icon-btn action-tool-btn more-btn"
+              [class.active]="isMoreMenuOpen()"
+              (click)="toggleMoreMenu($event)"
+              title="More Options & Help"
+            >
+              <md-icon name="more-horizontal" [size]="15" />
+            </button>
+
+            @if (isMoreMenuOpen()) {
+              <div class="more-dropdown-menu">
+                <!-- Mobile-only tools (shown when doc & view clusters are hidden at ≤600px) -->
+                @if (isMobile()) {
+                  <div class="more-menu-section-label">Document Tools</div>
+                  <button
+                    class="more-menu-item"
+                    (click)="toggleToc(); isMoreMenuOpen.set(false)"
+                    title="Document Outline (Ctrl+O)"
+                  >
+                    <md-icon name="toc" [size]="14" />
+                    <span>Document Outline</span>
+                    <kbd>Ctrl+O</kbd>
+                  </button>
+                  <button
+                    class="more-menu-item"
+                    (click)="toggleHistory(); isMoreMenuOpen.set(false)"
+                    title="Document History"
+                  >
+                    <md-icon name="history" [size]="14" />
+                    <span>Version History</span>
+                    <kbd>Ctrl+H</kbd>
+                  </button>
+                  @if (store.activeDocument(); as activeDoc) {
+                    <button
+                      class="more-menu-item"
+                      (click)="toggleEncryptModal(); isMoreMenuOpen.set(false)"
+                      [title]="activeDoc.isLocked ? 'Unlock Document' : 'Lock / Encrypt Document'"
+                    >
+                      <md-icon [name]="activeDoc.isLocked ? 'lock' : 'unlock'" [size]="14" />
+                      <span>{{ activeDoc.isLocked ? 'Unlock Document' : 'Encrypt Document' }}</span>
+                    </button>
+                  }
+                  <div class="more-menu-section-label">Views</div>
+                  <button
+                    class="more-menu-item"
+                    (click)="toggleGraph(); isMoreMenuOpen.set(false)"
+                    title="Knowledge Graph (Ctrl+G)"
+                  >
+                    <md-icon name="graph" [size]="14" />
+                    <span>Knowledge Graph</span>
+                    <kbd>Ctrl+G</kbd>
+                  </button>
+                  <button
+                    class="more-menu-item"
+                    (click)="toggleZenMode(); isMoreMenuOpen.set(false)"
+                    title="Zen / Focus Mode (F11)"
+                  >
+                    <md-icon [name]="isZenMode() ? 'minimize' : 'zen'" [size]="14" />
+                    <span>{{ isZenMode() ? 'Exit Zen Mode' : 'Zen / Focus Mode' }}</span>
+                    <kbd>F11</kbd>
+                  </button>
+                  <div class="more-menu-divider"></div>
+                }
+                <button
+                  class="more-menu-item"
+                  (click)="toggleTemplates(); isMoreMenuOpen.set(false)"
+                  title="Template Library (Ctrl+J)"
+                >
+                  <md-icon name="template" [size]="14" />
+                  <span>Template Library</span>
+                  <kbd>Ctrl+J</kbd>
+                </button>
+                <button
+                  class="more-menu-item"
+                  (click)="toggleShortcuts(); isMoreMenuOpen.set(false)"
+                  title="Keyboard Shortcuts & Help (Ctrl+/)"
+                >
+                  <md-icon name="help" [size]="14" />
+                  <span>Shortcuts & Help</span>
+                  <kbd>Ctrl+/</kbd>
+                </button>
+                <div class="more-menu-divider"></div>
+                <button
+                  class="more-menu-item"
+                  (click)="toggleAbout(); isMoreMenuOpen.set(false)"
+                  title="About MarkdownView"
+                >
+                  <md-icon name="info" [size]="14" />
+                  <span>About MarkdownView</span>
+                </button>
+                <a
+                  href="https://github.com/Subhrangsu90/markdown-view"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="more-menu-item"
+                  (click)="isMoreMenuOpen.set(false)"
+                  title="View Source on GitHub"
+                >
+                  <md-icon name="github" [size]="14" />
+                  <span>Star on GitHub</span>
+                  <md-icon name="external-link" [size]="12" class="ext-icon" />
+                </a>
+              </div>
+            }
+          </div>
+        </div>
 
         <!-- Quick stats pill -->
         @if (store.activeDocument()) {
@@ -268,7 +356,7 @@
           <div class="export-dropdown-wrapper">
             <button
               class="icon-btn export-btn"
-              (click)="toggleExportMenu()"
+              (click)="toggleExportMenu($event)"
               title="Export Document"
             >
               <md-icon name="export" [size]="16" />
