@@ -134,6 +134,16 @@
       </div>
 
       <div class="top-bar-right">
+        <!-- AI Assistant trigger (On-Device WebGPU & Cloud) -->
+        <button
+          class="icon-btn action-tool-btn ai-tool-btn"
+          [class.active]="isAiModalOpen()"
+          (click)="openAi()"
+          title="AI Assistant: On-Device WebGPU / Cloud / Ollama (Ctrl+Shift+A)"
+        >
+          <md-icon name="sparkles" [size]="16" />
+        </button>
+
         <!-- Universal Command Palette trigger -->
         <button
           class="icon-btn action-tool-btn"
@@ -554,6 +564,7 @@
       (setFolderViewMode)="onFolderViewModeChange($event)"
       (exportHtml)="exportHtml()"
       (exportZip)="exportAllZip()"
+      (openAi)="openAi($any($event.action))"
     />
   }
 
@@ -578,6 +589,18 @@
     <app-encrypt-modal
       (close)="isEncryptModalOpen.set(false)"
       (notify)="notifyUser($event)"
+    />
+  }
+
+  <!-- On-Device & Privacy-Preserving AI Assistant Modal -->
+  @if (isAiModalOpen()) {
+    <app-ai-modal
+      [initialAction]="aiInitialAction()"
+      [initialPrompt]="aiInitialPrompt()"
+      [documentContent]="store.activeDocument()?.content ?? ''"
+      [selectedText]="aiSelectedText()"
+      (close)="closeAi()"
+      (insertText)="onAiInsert($event)"
     />
   }
 </div>

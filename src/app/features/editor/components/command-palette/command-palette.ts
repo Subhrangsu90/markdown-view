@@ -45,6 +45,7 @@ export class CommandPalette implements AfterViewInit {
   readonly setFolderViewMode = output<'editor' | 'kanban' | 'table'>();
   readonly exportHtml = output<void>();
   readonly exportZip = output<void>();
+  readonly openAi = output<{ action?: string }>();
 
   protected readonly searchInputRef = viewChild<ElementRef<HTMLInputElement>>('searchInput');
   protected readonly searchQuery = signal<string>('');
@@ -52,6 +53,57 @@ export class CommandPalette implements AfterViewInit {
 
   /** Predefined actions list */
   private readonly actions: CommandItem[] = [
+    {
+      id: 'ai-assistant',
+      title: 'AI Assistant: Open AI Palette (WebGPU / Cloud / Ollama)',
+      category: 'action',
+      icon: 'sparkles',
+      shortcut: 'Ctrl+Shift+A',
+      action: () => {
+        this.close.emit();
+        this.openAi.emit({});
+      },
+    },
+    {
+      id: 'ai-summarize',
+      title: 'AI: Summarize Active Document (/ai summarize)',
+      category: 'action',
+      icon: 'sparkles',
+      action: () => {
+        this.close.emit();
+        this.openAi.emit({ action: 'summarize' });
+      },
+    },
+    {
+      id: 'ai-proofread',
+      title: 'AI: Proofread & Enhance Grammar (/ai proofread)',
+      category: 'action',
+      icon: 'check',
+      action: () => {
+        this.close.emit();
+        this.openAi.emit({ action: 'proofread' });
+      },
+    },
+    {
+      id: 'ai-generate-mermaid',
+      title: 'AI: Generate Mermaid Diagram (/ai generate-mermaid)',
+      category: 'action',
+      icon: 'flowchart',
+      action: () => {
+        this.close.emit();
+        this.openAi.emit({ action: 'generate-mermaid' });
+      },
+    },
+    {
+      id: 'ai-continue',
+      title: 'AI: Continue Writing from Cursor (Continue writing)',
+      category: 'action',
+      icon: 'edit',
+      action: () => {
+        this.close.emit();
+        this.openAi.emit({ action: 'continue' });
+      },
+    },
     {
       id: 'new-note',
       title: 'Create New Document',

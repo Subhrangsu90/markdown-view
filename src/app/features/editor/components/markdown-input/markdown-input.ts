@@ -101,6 +101,66 @@ export class MarkdownInput {
     this.slashTrigger.emit({ active: false, query: '', position: { top: 0, left: 0 } });
   }
 
+  clearSlashPrefix(): void {
+    const textarea = this.textareaRef()?.nativeElement;
+    if (!textarea) return;
+    const pos = textarea.selectionStart;
+    const value = textarea.value;
+    const lineStart = value.lastIndexOf('\n', pos - 1) + 1;
+    const currentLine = value.substring(lineStart, pos);
+    if (currentLine.startsWith('/')) {
+      const newValue = value.substring(0, lineStart) + value.substring(pos);
+      textarea.value = newValue;
+      textarea.selectionStart = textarea.selectionEnd = lineStart;
+      textarea.focus();
+      this.contentChange.emit(newValue);
+    }
+    this.slashTrigger.emit({ active: false, query: '', position: { top: 0, left: 0 } });
+  }
+
+  getSelectedText(): string {
+    const textarea = this.textareaRef()?.nativeElement;
+    if (!textarea) return '';
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    return textarea.value.substring(start, end);
+  }
+
+  insertAtCursor(text: string): void {
+    const textarea = this.textareaRef()?.nativeElement;
+    if (!textarea) return;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const value = textarea.value;
+    const newValue = value.substring(0, start) + text + value.substring(end);
+    textarea.value = newValue;
+    const newPos = start + text.length;
+    textarea.selectionStart = textarea.selectionEnd = newPos;
+    textarea.focus();
+    this.contentChange.emit(newValue);
+  }
+
+  replaceSelection(text: string): void {
+    const textarea = this.textareaRef()?.nativeElement;
+    if (!textarea) return;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const value = textarea.value;
+    if (start === end) {
+      textarea.value = text;
+      textarea.selectionStart = textarea.selectionEnd = text.length;
+      textarea.focus();
+      this.contentChange.emit(text);
+      return;
+    }
+    const newValue = value.substring(0, start) + text + value.substring(end);
+    textarea.value = newValue;
+    const newPos = start + text.length;
+    textarea.selectionStart = textarea.selectionEnd = newPos;
+    textarea.focus();
+    this.contentChange.emit(newValue);
+  }
+
   insertWikilink(docTitle: string): void {
     const textarea = this.textareaRef()?.nativeElement;
     if (!textarea) return;

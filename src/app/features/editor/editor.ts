@@ -25,6 +25,8 @@ import {
   DOCUMENT_ICON_PALETTE,
   resolveIconName,
   DocumentTemplate,
+  AiAssistantService,
+  AiAction,
 } from 'md-core';
 import { FormsModule } from '@angular/forms';
 import { Sidebar } from './components/sidebar/sidebar';
@@ -42,6 +44,7 @@ import { WikilinkPopup } from './components/wikilink-popup/wikilink-popup';
 import { KanbanView } from './components/kanban-view/kanban-view';
 import { TableView } from './components/table-view/table-view';
 import { BacklinksPanel } from './components/backlinks-panel/backlinks-panel';
+import { AiModal } from './components/ai-modal/ai-modal';
 
 export type ViewMode = 'edit' | 'preview' | 'split';
 export type FolderViewMode = 'editor' | 'kanban' | 'table';
@@ -71,6 +74,7 @@ export type FolderViewMode = 'editor' | 'kanban' | 'table';
     KanbanView,
     TableView,
     BacklinksPanel,
+    AiModal,
     MdIcon,
   ],
   templateUrl: './editor.html',
@@ -82,6 +86,7 @@ export class Editor {
   protected readonly fileExport = inject(FileExportService);
   protected readonly localDir = inject(LocalDirectoryService);
   protected readonly indexedDb = inject(IndexedDbService);
+  protected readonly aiService = inject(AiAssistantService);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly isBrowser = isPlatformBrowser(this.platformId);
 
@@ -114,6 +119,12 @@ export class Editor {
   protected readonly isEncryptModalOpen = signal(false);
   protected readonly isBacklinksOpen = signal(true);
   protected readonly folderViewMode = signal<FolderViewMode>('editor');
+
+  // AI Assistant state
+  protected readonly isAiModalOpen = signal(false);
+  protected readonly aiInitialAction = signal<AiAction | null>(null);
+  protected readonly aiInitialPrompt = signal<string>('');
+  protected readonly aiSelectedText = signal<string>('');
 
   protected readonly slashState = signal<SlashTriggerEvent>({
     active: false,
@@ -297,8 +308,54 @@ export class Editor {
   }
 
   protected onSlashCommandSelect(cmd: SlashCommand): void {
+    if (cmd.id.startsWith('ai-')) {
+      this.inputComponent()?.clearSlashPrefix();
+      this.slashState.set({ active: false, query: '', position: { top: 0, left: 0 } });
+      let action: AiAction = 'custom';
+      if (cmd.id === 'ai-summarize') action = 'summarize';
+      else if (cmd.id === 'ai-proofread') action = 'proofread';
+      else if (cmd.id === 'ai-generate-mermaid') action = 'generate-mermaid';
+      else if (cmd.id === 'ai-continue') action = 'continue';
+      this.openAi(action);
+      return;
+    }
+
     this.inputComponent()?.insertSlashCommand(cmd.snippet);
     this.slashState.set({ active: false, query: '', position: { top: 0, left: 0 } });
+  }
+
+  /** Open AI Assistant modal */
+  protected openAi(action?: AiAction, prompt?: string): void {
+    const selected = this.inputComponent()?.getSelectedText() || '';
+    this.aiSelectedText.set(selected);
+    this.aiInitialAction.set(action ?? null);
+    this.aiInitialPrompt.set(prompt ?? '');
+    this.isAiModalOpen.set(true);
+  }
+
+  protected closeAi(): void {
+    this.isAiModalOpen.set(false);
+    this.aiInitialAction.set(null);
+    this.aiInitialPrompt.set('');
+  }
+
+  protected onAiInsert(event: { text: string; mode: 'insert' | 'replace' | 'append' }): void {
+    const { text, mode } = event;
+    if (mode === 'replace') {
+      if (this.aiSelectedText()) {
+        this.inputComponent()?.replaceSelection(text);
+      } else {
+        this.store.updateContent(text);
+      }
+      this.notifyUser('Replaced with AI output');
+    } else if (mode === 'insert') {
+      this.inputComponent()?.insertAtCursor(text);
+      this.notifyUser('Inserted AI output at cursor');
+    } else if (mode === 'append') {
+      this.inputComponent()?.insertAtCursor('\n\n' + text);
+      this.notifyUser('Appended AI output');
+    }
+    this.closeAi();
   }
 
   /** Find & Replace handlers */
@@ -822,6 +879,16 @@ export class Editor {
 
     if (event.ctrlKey || event.metaKey) {
       switch (event.key.toLowerCase()) {
+        case 'a':
+          if (event.shiftKey) {
+            event.preventDefault();
+            this.openAi();
+          }
+          break;
+        case 'i':
+          event.preventDefault();
+          this.openAi();
+          break;
         case 'k':
           event.preventDefault();
           this.toggleCommandPalette();

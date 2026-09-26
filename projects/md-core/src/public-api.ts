@@ -19,6 +19,7 @@ export * from './lib/services/encryption.service';
 export * from './lib/services/document-history.service';
 export * from './lib/services/indexed-db.service';
 export * from './lib/services/syntax-highlighter';
+export * from './lib/services/ai-assistant.service';
 
 // Components
 export * from './lib/components/toolbar/toolbar';

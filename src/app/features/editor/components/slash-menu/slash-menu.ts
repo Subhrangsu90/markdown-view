@@ -15,11 +15,51 @@ export interface SlashCommand {
   title: string;
   description: string;
   icon: IconName;
-  category: 'Basic' | 'Lists' | 'Advanced';
+  category: 'Basic' | 'Lists' | 'Advanced' | 'AI';
   snippet: string;
 }
 
 const COMMANDS: SlashCommand[] = [
+  {
+    id: 'ai-summarize',
+    title: '/ai summarize',
+    description: 'Executive summary & key takeaways',
+    icon: 'sparkles',
+    category: 'AI',
+    snippet: '',
+  },
+  {
+    id: 'ai-proofread',
+    title: '/ai proofread',
+    description: 'Fix grammar, typos & polish clarity',
+    icon: 'check',
+    category: 'AI',
+    snippet: '',
+  },
+  {
+    id: 'ai-generate-mermaid',
+    title: '/ai generate-mermaid',
+    description: 'Generate flowcharts, sequence diagrams & mindmaps',
+    icon: 'flowchart',
+    category: 'AI',
+    snippet: '',
+  },
+  {
+    id: 'ai-continue',
+    title: 'Continue writing',
+    description: 'Intelligently continue text from cursor',
+    icon: 'edit',
+    category: 'AI',
+    snippet: '',
+  },
+  {
+    id: 'ai-assist',
+    title: '/ai',
+    description: 'Open On-Device / Privacy-Preserving AI Assistant',
+    icon: 'bot',
+    category: 'AI',
+    snippet: '',
+  },
   {
     id: 'h1',
     title: 'Heading 1',
