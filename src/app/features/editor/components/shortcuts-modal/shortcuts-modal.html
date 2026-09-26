@@ -15,8 +15,16 @@
     <div class="modal-body">
       <!-- Section 1: Navigation & Modes -->
       <div class="shortcuts-section">
-        <h4>Editor Navigation</h4>
+        <h4>Editor Navigation & Tools</h4>
         <div class="shortcut-grid">
+          <div class="shortcut-item">
+            <span class="shortcut-label">Command Palette</span>
+            <div class="kbd-group"><kbd>Ctrl</kbd> + <kbd>K</kbd></div>
+          </div>
+          <div class="shortcut-item">
+            <span class="shortcut-label">Split View</span>
+            <div class="kbd-group"><kbd>Ctrl</kbd> + <kbd>\</kbd></div>
+          </div>
           <div class="shortcut-item">
             <span class="shortcut-label">Edit Mode</span>
             <div class="kbd-group"><kbd>Ctrl</kbd> + <kbd>E</kbd></div>
@@ -26,50 +34,64 @@
             <div class="kbd-group"><kbd>Ctrl</kbd> + <kbd>P</kbd></div>
           </div>
           <div class="shortcut-item">
-            <span class="shortcut-label">Split View</span>
-            <div class="kbd-group"><kbd>Ctrl</kbd> + <kbd>\</kbd></div>
+            <span class="shortcut-label">Knowledge Graph</span>
+            <div class="kbd-group"><kbd>Ctrl</kbd> + <kbd>G</kbd></div>
+          </div>
+          <div class="shortcut-item">
+            <span class="shortcut-label">Revision History</span>
+            <div class="kbd-group"><kbd>Ctrl</kbd> + <kbd>H</kbd></div>
           </div>
           <div class="shortcut-item">
             <span class="shortcut-label">Toggle Sidebar</span>
             <div class="kbd-group"><kbd>Ctrl</kbd> + <kbd>B</kbd></div>
           </div>
           <div class="shortcut-item">
-            <span class="shortcut-label">Toggle Outline (TOC)</span>
+            <span class="shortcut-label">Outline (TOC)</span>
             <div class="kbd-group"><kbd>Ctrl</kbd> + <kbd>O</kbd></div>
           </div>
           <div class="shortcut-item">
             <span class="shortcut-label">Find & Replace</span>
             <div class="kbd-group"><kbd>Ctrl</kbd> + <kbd>F</kbd></div>
           </div>
+          <div class="shortcut-item">
+            <span class="shortcut-label">Template Library</span>
+            <div class="kbd-group"><kbd>Ctrl</kbd> + <kbd>J</kbd></div>
+          </div>
+          <div class="shortcut-item">
+            <span class="shortcut-label">Focus (Zen) Mode</span>
+            <div class="kbd-group"><kbd>F11</kbd></div>
+          </div>
+          <div class="shortcut-item">
+            <span class="shortcut-label">Shortcuts Help</span>
+            <div class="kbd-group"><kbd>Ctrl</kbd> + <kbd>/</kbd></div>
+          </div>
         </div>
       </div>
 
-      <!-- Section 2: Notion Slash Commands -->
+      <!-- Section 2: Notion Slash Commands & Markdown -->
       <div class="shortcuts-section">
-        <h4>Notion Slash Commands</h4>
+        <h4>Notion Slash Commands & Dynamic Blocks</h4>
         <p class="section-desc">Type <kbd>/</kbd> on any line to open quick-insert menu:</p>
         <div class="syntax-list">
           <div class="syntax-row"><code>/h1</code>, <code>/h2</code>, <code>/h3</code> <span>Heading blocks</span></div>
           <div class="syntax-row"><code>/todo</code> <span>Interactive task item with checkbox</span></div>
-          <div class="syntax-row"><code>/code</code> <span>Syntax highlighted code block</span></div>
+          <div class="syntax-row"><code>/code</code> <span>PrismJS syntax-colored code block</span></div>
           <div class="syntax-row"><code>/table</code> <span>Pre-structured Markdown table</span></div>
           <div class="syntax-row"><code>/math</code> <span>KaTeX LaTeX equation block</span></div>
           <div class="syntax-row"><code>/mermaid</code> <span>Mermaid flowcharts & sequence diagrams</span></div>
-          <div class="syntax-row"><code>/callout</code> <span>Notion-style highlight callouts</span></div>
+          <div class="syntax-row"><code>/callout</code> <span>Alert callouts (> [!NOTE], TIP, IMPORTANT, WARNING, CAUTION)</span></div>
         </div>
       </div>
 
-      <!-- Section 3: Markdown Syntax -->
+      <!-- Section 3: Obsidian & Notion Syntax -->
       <div class="shortcuts-section">
-        <h4>Markdown Syntax</h4>
+        <h4>Knowledge Linking & Multi-Views</h4>
         <div class="syntax-list">
-          <div class="syntax-row"><code>**bold**</code> <span>Bold text</span></div>
-          <div class="syntax-row"><code>*italic*</code> <span>Italic text</span></div>
-          <div class="syntax-row"><code>~~strike~~</code> <span>Strikethrough</span></div>
-          <div class="syntax-row"><code>`code`</code> <span>Inline monospace code</span></div>
-          <div class="syntax-row"><code>> quote</code> <span>Blockquote citation</span></div>
-          <div class="syntax-row"><code>- [ ] task</code> <span>Task list item</span></div>
-          <div class="syntax-row"><code>> [!NOTE]</code> <span>Alerts: NOTE, TIP, IMPORTANT, WARNING, CAUTION</span></div>
+          <div class="syntax-row"><code>[[Note Title]]</code> <span>Obsidian-style wikilink with autocompletion popup</span></div>
+          <div class="syntax-row"><code>#tag</code> <span>Tag taxonomy explorer & filter</span></div>
+          <div class="syntax-row"><code>![alt](assets/img.png)</code> <span>Binary image stored in IndexedDB (paste with Ctrl+V)</span></div>
+          <div class="syntax-row"><code>--- YAML ---</code> <span>Frontmatter properties (powers Kanban & Table views)</span></div>
+          <div class="syntax-row"><code>$E=mc^2$</code> <span>Inline KaTeX mathematical expression</span></div>
         </div>
       </div>
     </div>

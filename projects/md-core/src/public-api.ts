@@ -6,6 +6,7 @@
 export * from './lib/models/document.model';
 export * from './lib/models/templates';
 export * from './lib/models/frontmatter.util';
+export * from './lib/models/welcome.content';
 
 // Services
 export * from './lib/services/document-store';

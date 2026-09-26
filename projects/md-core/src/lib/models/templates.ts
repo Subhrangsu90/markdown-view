@@ -1,4 +1,5 @@
 import { IconName } from '../icons/icon-registry';
+import { WELCOME_CONTENT, DOCUMENTATION_CONTENT } from './welcome.content';
 
 export interface DocumentTemplate {
   id: string;
@@ -10,6 +11,22 @@ export interface DocumentTemplate {
 }
 
 export const STARTER_TEMPLATES: DocumentTemplate[] = [
+  {
+    id: 'welcome-guide',
+    title: 'Welcome to MarkdownView Guide',
+    description: 'Interactive introduction to IndexedDB, image pasting, PrismJS syntax, exports, and multi-views.',
+    icon: 'sparkles',
+    category: 'Product',
+    content: WELCOME_CONTENT,
+  },
+  {
+    id: 'tech-documentation',
+    title: 'MarkdownView Technical & Architecture Manual',
+    description: 'Comprehensive technical reference covering storage schema, [[Wikilinks]], encryption, and API pipeline.',
+    icon: 'book',
+    category: 'Engineering',
+    content: DOCUMENTATION_CONTENT,
+  },
   {
     id: 'system-architecture',
     title: 'System Architecture Spec',

@@ -22,14 +22,46 @@
 
 **MarkdownView** bridges the gap between the structured ease of modern productivity suites (like Notion) and the uncompromised ownership and speed of raw Markdown editors (like Obsidian, MarkText, and Typora).
 
-It runs **100% in your browser** with zero external trackers, telemetry, or server database lock-in. Your documents are stored safely in your browser's local database or saved directly to any folder on your computer's hard drive using the modern **Web File System Access API**.
+It runs **100% in your browser** with zero external trackers, telemetry, or server database lock-in. Your documents, history, and media assets are stored safely in the browser's native **IndexedDB** database with zero storage quotas, or synced directly to your physical hard drive using the **Web File System Access API**.
+
+For an exhaustive technical manual and API reference, see [DOCUMENTATION.md](DOCUMENTATION.md).
 
 ---
 
 ## ✨ Superpowers & Highlights
 
-### ⚡ Notion-Style Slash Commands (`/`)
-Hit `/` anywhere on a blank line to pop up an interactive command palette. Insert headings, code blocks, tables, task lists, blockquotes, math formulas, and diagrams without memorizing complex syntax.
+### 🗄️ Native IndexedDB Storage Engine (Zero Quota Caps)
+MarkdownView stores all notes, snapshot histories, user settings, and media assets directly in the browser's native **IndexedDB** (`markdown_view_db`). Unlike legacy `localStorage` (capped at 5MB), IndexedDB safely handles gigabytes of notes, historical revisions, and high-resolution assets with zero external dependencies.
+
+### 🖼️ Smart Image Pasting & Clean Asset Pipeline
+- **No Base64 Bloat in Markdown**: Paste (<kbd>Ctrl+V</kbd>) or drag-and-drop images directly into the editor. They are saved as binary `Blob` objects in IndexedDB and referenced cleanly as `![image](assets/your-image.png)`.
+- **Live Preview Resolution**: Images render instantly via dynamic object URLs with automatic memory caching.
+- **Export Portability**: When exporting to HTML or copying formatted text, images are automatically converted to inline Base64 data URIs on the fly.
+
+### 💻 Syntax Highlighting & Copy Buttons (PrismJS)
+Code blocks support 25+ programming languages (TypeScript, Rust, Python, Go, Java, C++, Bash, SQL, and more) with customized theme tokens, clean line styling, and an automated one-click copy button.
+
+### 🔗 Obsidian-Style [[Wikilinks]] & Backlinks Explorer
+- **Autocomplete [[Wikilinks]]**: Type `[[` anywhere in the editor to quickly link to any note in your workspace.
+- **Backlinks Panel**: Discover every document across your vault that links back to your active note.
+
+### 🕸️ Interactive Visual Knowledge Graph (<kbd>Ctrl+G</kbd>)
+Visualize your workspace as a dynamic, interactive force-directed graph. Explore connections between documents, tags (`#tag`), and wikilinks. Click any node to navigate directly to it.
+
+### 🗃️ Notion-Style Multi-Views & YAML Frontmatter
+Add YAML metadata to your documents to power specialized workspace views:
+- **Kanban Board View**: Organize cards into status columns (`Backlog`, `In Progress`, `Done`) with fluid drag-and-drop.
+- **Database Table View**: Inspect, filter, and sort your vault by title, folder, status, and tags.
+- **Document Editor View**: The classic split-view writing workspace.
+
+### 🕒 Document Revision History ("Time Machine" <kbd>Ctrl+H</kbd>)
+Inspect automatic incremental drafts as you write, view word and character diff summaries, and restore any previous version with a single click.
+
+### 🔒 Client-Side AES-GCM Vault Encryption
+Lock sensitive notes with client-side password encryption powered by Web Cryptography (SubtleCrypto AES-GCM with PBKDF2 key derivation). Notes cannot be viewed or decrypted without the passphrase.
+
+### ⚡ Notion-Style Slash Commands (`/`) & Command Palette (<kbd>Ctrl+K</kbd>)
+Summon headings, code blocks, tables, task lists, blockquotes, math formulas, and diagrams with a single `/` keystroke, or press <kbd>Ctrl+K</kbd> to execute commands across the workspace.
 
 ### 🔀 Synchronized Live Split-View
 Work in raw Markdown on the left while watching pixel-perfect rendered output on the right. Scroll positions stay effortlessly synchronized in real time. Switch between **Edit**, **Split**, and **Preview** with instant hotkeys.
@@ -46,41 +78,38 @@ Generate flowcharts, sequence diagrams, state machines, entity relationship diag
 
 ```mermaid
 graph LR
-    A[Plain Markdown] --> B(AST Parser)
-    B --> C{Output Target}
-    C -->|Web| D[Interactive Live Preview]
-    C -->|File| E[Standalone HTML / PDF]
-    C -->|Disk| F[Local Folder Sync]
+    A[Plain Markdown] --> B(IndexedDB Store)
+    B --> C{Workspace Views}
+    C -->|Split| D[🔀 Live Preview]
+    C -->|Kanban| E[📋 Sprint Board]
+    C -->|Table| F[📊 Database Table]
+    C -->|Graph| G[🕸️ Knowledge Graph]
+    B --> H[📤 HTML / ZIP Export]
 ```
 
-### 💻 Syntax Highlighting & Copy Buttons (PrismJS)
-Code blocks support 40+ programming languages with line formatting, syntax highlighting, and an automated one-click copy button.
-
-### 🗂️ Hierarchical File & Folder Management
-- Create, rename, and drag-to-reorder folders and pages
-- Pin favorites to the top of your workspace
-- Multi-select batch mode: bulk delete, bulk move, or bulk export to ZIP
-- Custom document emoji/icon cycling
+### 📤 Multi-Format Tailored Exports
+- **Download Doc + Images (.zip)**: Bundles the active note and its companion `assets/` folder (Obsidian format).
+- **Standalone .md (Embedded Images)**: Inlines local images as Base64 for a single self-contained Markdown file.
+- **Standalone HTML (.html)**: Self-contained file with embedded styles, KaTeX math, PrismJS colors, offline copy scripts, and Base64 images.
+- **Copy Formatted (with Images)**: Rich HTML clipboard copy ready to paste into Google Docs, Word, or Slack.
+- **Print to PDF**: Clean print stylesheet optimized for document printing.
+- **Workspace ZIP Archive**: Complete backup of all documents and folders.
 
 ### 📁 Native Local Hard Drive Sync
-MarkdownView leverages the **Web File System Access API**. Choose any folder on your machine (e.g. your Obsidian vault or GitHub docs directory) to auto-save and sync documents directly to disk.
+MarkdownView leverages the **Web File System Access API**. Choose any folder on your machine (e.g. your Obsidian vault or GitHub docs directory) to auto-save documents and companion `assets/` directly to disk.
 
 ### 🧘 Distraction-Free Focus (Zen) Mode
 Enter full-screen zen mode (`F11` or shortcut button) to eliminate chrome and sidebars for an immersive writing experience.
 
 ### 📚 Pre-Built Starter Templates
 Choose from high-utility starter templates:
+- **Welcome to MarkdownView Guide**
+- **MarkdownView Technical & Architecture Manual**
 - **System Architecture RFC Spec** (with Mermaid sequence diagrams)
 - **Product Roadmap & Sprint Board** (with task checklists)
 - **Mathematical Physics Lab Notes** (with KaTeX proofs)
 - **Executive Team Meeting Sync** (with action item assignments)
 - **Open Source Project README**
-
-### 📤 Multi-Format Export
-- **Download Markdown (`.md`)**
-- **Standalone HTML (`.html`)**: Self-contained file with embedded styles, KaTeX, and Mermaid support
-- **Print to PDF**: Clean CSS print stylesheets optimized for document printing
-- **Bulk ZIP Archive**: Download all pages organized neatly by folder structure
 
 ### 🌓 Adaptive Modern Themes
 Switch seamlessly between dark and light modes. Every token is carefully tuned with HSL CSS variables for maximum contrast and zero eye fatigue.

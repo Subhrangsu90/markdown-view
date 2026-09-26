@@ -63,6 +63,38 @@ export class CommandPalette implements AfterViewInit {
       },
     },
     {
+      id: 'open-welcome',
+      title: 'Open / Create Welcome Guide (✨ Tutorial)',
+      category: 'action',
+      icon: 'sparkles',
+      action: () => {
+        const docs = this.store.documents();
+        const existing = docs.find((d) => d.title.toLowerCase().includes('welcome'));
+        if (existing) {
+          this.store.select(existing.id);
+        } else {
+          this.store.createWelcomeDocument();
+        }
+        this.close.emit();
+      },
+    },
+    {
+      id: 'open-documentation',
+      title: 'Open / Create Technical Documentation Manual (📚 Specs)',
+      category: 'action',
+      icon: 'book',
+      action: () => {
+        const docs = this.store.documents();
+        const existing = docs.find((d) => d.title.toLowerCase().includes('documentation & architecture'));
+        if (existing) {
+          this.store.select(existing.id);
+        } else {
+          this.store.createDocumentationDocument();
+        }
+        this.close.emit();
+      },
+    },
+    {
       id: 'open-graph',
       title: 'Open Interactive Knowledge Graph',
       category: 'action',
