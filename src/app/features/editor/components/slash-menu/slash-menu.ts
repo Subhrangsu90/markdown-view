@@ -85,12 +85,28 @@ const COMMANDS: SlashCommand[] = [
     snippet: '> [!TIP]\n> ',
   },
   {
+    id: 'callout-important',
+    title: 'Callout: Important',
+    description: 'Crucial requirement or priority alert',
+    icon: 'sparkles',
+    category: 'Advanced',
+    snippet: '> [!IMPORTANT]\n> ',
+  },
+  {
     id: 'callout-warning',
     title: 'Callout: Warning',
-    description: 'Important warning or caution box',
+    description: 'Important warning or attention box',
     icon: 'warning',
     category: 'Advanced',
     snippet: '> [!WARNING]\n> ',
+  },
+  {
+    id: 'callout-caution',
+    title: 'Callout: Caution',
+    description: 'Negative consequence or danger warning',
+    icon: 'target',
+    category: 'Advanced',
+    snippet: '> [!CAUTION]\n> ',
   },
   {
     id: 'code',
@@ -106,7 +122,8 @@ const COMMANDS: SlashCommand[] = [
     description: 'Grid layout table with columns',
     icon: 'table',
     category: 'Advanced',
-    snippet: '| Feature | Status | Notes |\n|---|---|---|\n| Item 1 | Active | Details |\n| Item 2 | Done | Done |\n',
+    snippet:
+      '| Feature | Status | Notes |\n|---|---|---|\n| Item 1 | Active | Details |\n| Item 2 | Done | Done |\n',
   },
   {
     id: 'math',
@@ -122,7 +139,8 @@ const COMMANDS: SlashCommand[] = [
     description: 'Interactive flowchart or sequence diagram',
     icon: 'flowchart',
     category: 'Advanced',
-    snippet: '```mermaid\ngraph TD\n  Start[Start] --> Process[Do Work]\n  Process --> Finish[Complete]\n```\n',
+    snippet:
+      '```mermaid\ngraph TD\n  Start[Start] --> Process[Do Work]\n  Process --> Finish[Complete]\n```\n',
   },
   {
     id: 'quote',

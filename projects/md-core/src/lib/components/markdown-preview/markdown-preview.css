@@ -107,7 +107,6 @@
   text-decoration-color: var(--accent);
   background: var(--surface-active);
   border-radius: 3px;
-
 }
 
 /* ===== LISTS (Fix for Tailwind Reset) ===== */
@@ -300,7 +299,7 @@
   border-radius: 3px;
 }
 
-/* ===== Notion Callouts & Blockquotes ===== */
+/* ===== Blockquotes & GFM Alerts / Notion Callouts ===== */
 :host ::ng-deep blockquote {
   margin: 1.35rem 0;
   padding: 14px 20px;
@@ -324,53 +323,158 @@
   margin-bottom: 0;
 }
 
-/* Notion Callouts */
+/* GitHub Alerts & Notion Callouts */
+:host ::ng-deep blockquote.markdown-alert,
 :host ::ng-deep blockquote.notion-callout {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
+  display: block;
+  margin: 1.35rem 0;
   padding: 14px 18px;
-  border-left: none;
-  border-radius: 8px;
+  border-radius: 6px;
   font-style: normal;
   box-shadow: var(--shadow-sm);
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
 }
 
-:host ::ng-deep blockquote.notion-callout p {
-  font-style: normal;
-  color: var(--text-primary);
-  margin: 0;
+:host ::ng-deep .markdown-alert-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.4;
+  margin-bottom: 8px;
+  letter-spacing: -0.01em;
 }
 
-:host ::ng-deep .callout-icon {
-  font-size: 1.25rem;
-  line-height: 1.2;
+:host ::ng-deep .markdown-alert-title .alert-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
   flex-shrink: 0;
 }
 
+:host ::ng-deep .markdown-alert-title .alert-icon svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+:host ::ng-deep .markdown-alert-title .alert-name {
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+:host ::ng-deep .markdown-alert-content {
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: var(--text-primary);
+  font-style: normal;
+}
+
+:host ::ng-deep .markdown-alert-content p {
+  font-style: normal;
+  color: var(--text-primary);
+  margin: 0.35rem 0;
+}
+
+:host ::ng-deep .markdown-alert-content p:first-child {
+  margin-top: 0;
+}
+
+:host ::ng-deep .markdown-alert-content p:last-child {
+  margin-bottom: 0;
+}
+
+:host ::ng-deep .markdown-alert-content ul,
+:host ::ng-deep .markdown-alert-content ol {
+  margin: 0.4rem 0;
+  padding-left: 1.25rem;
+}
+
+:host ::ng-deep .markdown-alert-content li {
+  margin: 0.2rem 0;
+  color: var(--text-primary);
+}
+
+:host ::ng-deep .markdown-alert-content code {
+  background: var(--code-inline-bg);
+  border: 1px solid var(--code-inline-border);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+/* Callout Note */
+:host ::ng-deep blockquote.markdown-alert-note,
 :host ::ng-deep blockquote.callout-note {
-  background: rgba(59, 130, 246, 0.08);
-  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-left: 3.5px solid var(--alert-note-accent, #3b82f6);
+  border-top: 1px solid var(--alert-note-border, rgba(59, 130, 246, 0.2));
+  border-right: 1px solid var(--alert-note-border, rgba(59, 130, 246, 0.2));
+  border-bottom: 1px solid var(--alert-note-border, rgba(59, 130, 246, 0.2));
+  background: var(--alert-note-bg, rgba(59, 130, 246, 0.08));
+}
+:host ::ng-deep blockquote.markdown-alert-note .markdown-alert-title,
+:host ::ng-deep blockquote.callout-note .markdown-alert-title {
+  color: var(--alert-note-title, #60a5fa);
 }
 
+/* Callout Tip */
+:host ::ng-deep blockquote.markdown-alert-tip,
 :host ::ng-deep blockquote.callout-tip {
-  background: rgba(34, 197, 94, 0.08);
-  border: 1px solid rgba(34, 197, 94, 0.2);
+  border-left: 3.5px solid var(--alert-tip-accent, #22c55e);
+  border-top: 1px solid var(--alert-tip-border, rgba(34, 197, 94, 0.2));
+  border-right: 1px solid var(--alert-tip-border, rgba(34, 197, 94, 0.2));
+  border-bottom: 1px solid var(--alert-tip-border, rgba(34, 197, 94, 0.2));
+  background: var(--alert-tip-bg, rgba(34, 197, 94, 0.08));
+}
+:host ::ng-deep blockquote.markdown-alert-tip .markdown-alert-title,
+:host ::ng-deep blockquote.callout-tip .markdown-alert-title {
+  color: var(--alert-tip-title, #4ade80);
 }
 
+/* Callout Important */
+:host ::ng-deep blockquote.markdown-alert-important,
 :host ::ng-deep blockquote.callout-important {
-  background: rgba(168, 85, 247, 0.08);
-  border: 1px solid rgba(168, 85, 247, 0.2);
+  border-left: 3.5px solid var(--alert-important-accent, #a855f7);
+  border-top: 1px solid var(--alert-important-border, rgba(168, 85, 247, 0.2));
+  border-right: 1px solid var(--alert-important-border, rgba(168, 85, 247, 0.2));
+  border-bottom: 1px solid var(--alert-important-border, rgba(168, 85, 247, 0.2));
+  background: var(--alert-important-bg, rgba(168, 85, 247, 0.08));
+}
+:host ::ng-deep blockquote.markdown-alert-important .markdown-alert-title,
+:host ::ng-deep blockquote.callout-important .markdown-alert-title {
+  color: var(--alert-important-title, #c084fc);
 }
 
+/* Callout Warning */
+:host ::ng-deep blockquote.markdown-alert-warning,
 :host ::ng-deep blockquote.callout-warning {
-  background: rgba(245, 158, 11, 0.08);
-  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-left: 3.5px solid var(--alert-warning-accent, #f59e0b);
+  border-top: 1px solid var(--alert-warning-border, rgba(245, 158, 11, 0.2));
+  border-right: 1px solid var(--alert-warning-border, rgba(245, 158, 11, 0.2));
+  border-bottom: 1px solid var(--alert-warning-border, rgba(245, 158, 11, 0.2));
+  background: var(--alert-warning-bg, rgba(245, 158, 11, 0.08));
+}
+:host ::ng-deep blockquote.markdown-alert-warning .markdown-alert-title,
+:host ::ng-deep blockquote.callout-warning .markdown-alert-title {
+  color: var(--alert-warning-title, #fbbf24);
 }
 
+/* Callout Caution */
+:host ::ng-deep blockquote.markdown-alert-caution,
 :host ::ng-deep blockquote.callout-caution {
-  background: rgba(239, 68, 68, 0.08);
-  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-left: 3.5px solid var(--alert-caution-accent, #ef4444);
+  border-top: 1px solid var(--alert-caution-border, rgba(239, 68, 68, 0.2));
+  border-right: 1px solid var(--alert-caution-border, rgba(239, 68, 68, 0.2));
+  border-bottom: 1px solid var(--alert-caution-border, rgba(239, 68, 68, 0.2));
+  background: var(--alert-caution-bg, rgba(239, 68, 68, 0.08));
+}
+:host ::ng-deep blockquote.markdown-alert-caution .markdown-alert-title,
+:host ::ng-deep blockquote.callout-caution .markdown-alert-title {
+  color: var(--alert-caution-title, #f87171);
 }
 
 /* ===== Tables (Notion Style) ===== */
@@ -424,7 +528,13 @@
 :host ::ng-deep hr {
   border: none;
   height: 1px;
-  background: linear-gradient(90deg, transparent 0%, var(--border-strong) 20%, var(--border-strong) 80%, transparent 100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--border-strong) 20%,
+    var(--border-strong) 80%,
+    transparent 100%
+  );
   margin: 2.2rem 0;
 }
 
@@ -437,8 +547,19 @@
 }
 
 /* Standalone content images (screenshots, diagrams) */
-:host ::ng-deep p > img:only-child:not([src*="shields.io"]):not([src*="badge"]):not([src*="badgen"]):not(.markdown-badge),
-:host ::ng-deep p > a:only-child > img:only-child:not([src*="shields.io"]):not([src*="badge"]):not([src*="badgen"]):not(.markdown-badge) {
+:host
+  ::ng-deep
+  p
+  > img:only-child:not([src*='shields.io']):not([src*='badge']):not([src*='badgen']):not(
+    .markdown-badge
+  ),
+:host
+  ::ng-deep
+  p
+  > a:only-child
+  > img:only-child:not([src*='shields.io']):not([src*='badge']):not([src*='badgen']):not(
+    .markdown-badge
+  ) {
   display: block;
   margin: 1.5rem auto;
   border-radius: 10px;
@@ -447,11 +568,11 @@
 }
 
 /* Badges (Shields.io, GitHub Action badges, etc.) */
-:host ::ng-deep img[src*="shields.io"],
-:host ::ng-deep img[src*="badge"],
-:host ::ng-deep img[src*="badgen"],
-:host ::ng-deep img[src*="workflows/"][src*="badge"],
-:host ::ng-deep img[src*="codecov"],
+:host ::ng-deep img[src*='shields.io'],
+:host ::ng-deep img[src*='badge'],
+:host ::ng-deep img[src*='badgen'],
+:host ::ng-deep img[src*='workflows/'][src*='badge'],
+:host ::ng-deep img[src*='codecov'],
 :host ::ng-deep img.markdown-badge,
 :host ::ng-deep .markdown-badge-row img {
   display: inline-block !important;
@@ -466,7 +587,14 @@
 
 /* Badge Rows: display as horizontal flex wrap with clean spacing */
 :host ::ng-deep .markdown-badge-row,
-:host ::ng-deep p:has(> a > img[src*="shields.io"], > a > img[src*="badge"], > img[src*="shields.io"], > img[src*="badge"]) {
+:host
+  ::ng-deep
+  p:has(
+    > a > img[src*='shields.io'],
+    > a > img[src*='badge'],
+    > img[src*='shields.io'],
+    > img[src*='badge']
+  ) {
   display: flex !important;
   flex-wrap: wrap !important;
   align-items: center !important;
@@ -474,31 +602,48 @@
   margin: 0.85rem 0 1.25rem !important;
 }
 
-:host ::ng-deep .markdown-badge-row[align="center"],
-:host ::ng-deep p[align="center"]:has(> a > img[src*="shields.io"], > a > img[src*="badge"], > img[src*="shields.io"], > img[src*="badge"]) {
+:host ::ng-deep .markdown-badge-row[align='center'],
+:host
+  ::ng-deep
+  p[align='center']:has(
+    > a > img[src*='shields.io'],
+    > a > img[src*='badge'],
+    > img[src*='shields.io'],
+    > img[src*='badge']
+  ) {
   justify-content: center !important;
 }
 
 :host ::ng-deep .markdown-badge-row br,
-:host ::ng-deep p:has(> a > img[src*="shields.io"], > a > img[src*="badge"], > img[src*="shields.io"], > img[src*="badge"]) br {
+:host
+  ::ng-deep
+  p:has(
+    > a > img[src*='shields.io'],
+    > a > img[src*='badge'],
+    > img[src*='shields.io'],
+    > img[src*='badge']
+  )
+  br {
   display: none !important;
 }
 
 :host ::ng-deep .markdown-badge-link,
 :host ::ng-deep .markdown-badge-row a,
-:host ::ng-deep p:has(> a > img[src*="shields.io"], > a > img[src*="badge"]) a {
+:host ::ng-deep p:has(> a > img[src*='shields.io'], > a > img[src*='badge']) a {
   display: inline-flex !important;
   align-items: center !important;
   text-decoration: none !important;
   margin: 0 !important;
   padding: 0 !important;
   line-height: 1 !important;
-  transition: opacity 0.15s ease, transform 0.15s ease;
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
 }
 
 :host ::ng-deep .markdown-badge-link:hover,
 :host ::ng-deep .markdown-badge-row a:hover,
-:host ::ng-deep p:has(> a > img[src*="shields.io"], > a > img[src*="badge"]) a:hover {
+:host ::ng-deep p:has(> a > img[src*='shields.io'], > a > img[src*='badge']) a:hover {
   opacity: 0.88;
   transform: translateY(-1px);
 }
@@ -588,9 +733,9 @@
     margin: 1rem 0;
   }
 
-  :host ::ng-deep blockquote.notion-callout {
+  :host ::ng-deep blockquote.notion-callout,
+  :host ::ng-deep blockquote.markdown-alert {
     padding: 10px 14px;
-    gap: 8px;
   }
 }
 

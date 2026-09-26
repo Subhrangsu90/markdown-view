@@ -5,7 +5,12 @@
       <md-icon name="brand" [size]="20" />
       <span class="brand-text">MarkdownView</span>
     </div>
-    <button class="mobile-close-btn" (click)="toggleSidebar.emit()" title="Close sidebar" aria-label="Close sidebar">
+    <button
+      class="mobile-close-btn"
+      (click)="toggleSidebar.emit()"
+      title="Close sidebar"
+      aria-label="Close sidebar"
+    >
       <md-icon name="close" [size]="18" />
     </button>
   </div>
@@ -29,7 +34,11 @@
       <span>New Page</span>
     </button>
     <div class="action-toolbar">
-      <button class="action-btn secondary" (click)="openTemplates.emit()" title="Explore starter templates">
+      <button
+        class="action-btn secondary"
+        (click)="openTemplates.emit()"
+        title="Explore starter templates"
+      >
         <md-icon name="template" [size]="13" />
         <span>Templates</span>
       </button>
@@ -170,7 +179,11 @@
         (keydown.escape)="cancelCreateFolder()"
         autofocus
       />
-      <button class="folder-action-icon-btn check" (click)="confirmCreateFolder()" title="Create folder">
+      <button
+        class="folder-action-icon-btn check"
+        (click)="confirmCreateFolder()"
+        title="Create folder"
+      >
         <md-icon name="check" [size]="12" [strokeWidth]="3" />
       </button>
       <button class="folder-action-icon-btn close" (click)="cancelCreateFolder()" title="Cancel">
@@ -265,10 +278,7 @@
       </div>
 
       @for (group of folderGroups(); track group.name) {
-        <div
-          class="folder-group"
-          [class.drop-target-folder]="dragOverFolder() === group.name"
-        >
+        <div class="folder-group" [class.drop-target-folder]="dragOverFolder() === group.name">
           <!-- Folder Header Row -->
           <div
             class="folder-header"
@@ -292,7 +302,11 @@
             </button>
 
             <span class="folder-icon">
-              <md-icon [name]="isFolderCollapsed(group.name) ? 'folder' : 'folder-open'" [size]="14" class="folder-svg-icon" />
+              <md-icon
+                [name]="isFolderCollapsed(group.name) ? 'folder' : 'folder-open'"
+                [size]="14"
+                class="folder-svg-icon"
+              />
             </span>
 
             @if (editingFolder() === group.name) {
@@ -306,10 +320,18 @@
                   (keydown.escape)="cancelRenameFolder()"
                   autofocus
                 />
-                <button class="folder-action-icon-btn check" (click)="confirmRenameFolder(group.name)" title="Save name">
+                <button
+                  class="folder-action-icon-btn check"
+                  (click)="confirmRenameFolder(group.name)"
+                  title="Save name"
+                >
                   <md-icon name="check" [size]="10" [strokeWidth]="3" />
                 </button>
-                <button class="folder-action-icon-btn close" (click)="cancelRenameFolder()" title="Cancel">
+                <button
+                  class="folder-action-icon-btn close"
+                  (click)="cancelRenameFolder()"
+                  title="Cancel"
+                >
                   <md-icon name="close" [size]="10" [strokeWidth]="2.5" />
                 </button>
               </div>
@@ -359,8 +381,12 @@
                   [class.active]="store.activeId() === doc.id"
                   [class.multi-selected]="selectedDocIds().has(doc.id)"
                   [class.dragging]="draggingDocId() === doc.id"
-                  [class.drop-target-before]="dragOverDocId() === doc.id && dragOverPosition() === 'before'"
-                  [class.drop-target-after]="dragOverDocId() === doc.id && dragOverPosition() === 'after'"
+                  [class.drop-target-before]="
+                    dragOverDocId() === doc.id && dragOverPosition() === 'before'
+                  "
+                  [class.drop-target-after]="
+                    dragOverDocId() === doc.id && dragOverPosition() === 'after'
+                  "
                   draggable="true"
                   (dragstart)="onDocDragStart($event, doc.id)"
                   (dragend)="onDocDragEnd()"
@@ -521,7 +547,11 @@
     }
 
     <!-- Empty State -->
-    @if (filteredFavoriteDocuments().length === 0 && folderGroups().length === 0 && filteredUncategorizedDocuments().length === 0) {
+    @if (
+      filteredFavoriteDocuments().length === 0 &&
+      folderGroups().length === 0 &&
+      filteredUncategorizedDocuments().length === 0
+    ) {
       <div class="empty-list">
         <p>No documents found</p>
       </div>
@@ -534,7 +564,11 @@
       <div class="batch-bar">
         <div class="batch-bar-header">
           <span class="batch-count-badge">{{ selectedDocIds().size }} selected</span>
-          <button class="batch-select-all-btn" (click)="selectAllVisible()" title="Select all visible documents">
+          <button
+            class="batch-select-all-btn"
+            (click)="selectAllVisible()"
+            title="Select all visible documents"
+          >
             All
           </button>
           <button class="batch-close-btn" (click)="clearSelection()" title="Clear selection (Esc)">
@@ -592,11 +626,7 @@
           </button>
 
           <!-- Delete -->
-          <button
-            class="batch-action-btn delete"
-            (click)="batchDelete()"
-            title="Delete selected"
-          >
+          <button class="batch-action-btn delete" (click)="batchDelete()" title="Delete selected">
             <md-icon name="delete" [size]="12" />
           </button>
         </div>
@@ -636,7 +666,8 @@
         </div>
         <h3 class="delete-dialog-title">Delete Document</h3>
         <p class="delete-dialog-message">
-          Are you sure you want to delete <strong>"{{ pendingDeleteTitle() }}"</strong>? This action cannot be undone.
+          Are you sure you want to delete <strong>"{{ pendingDeleteTitle() }}"</strong>? This action
+          cannot be undone.
         </p>
         <div class="delete-dialog-actions">
           <button class="delete-dialog-btn cancel" (click)="cancelDelete()">Cancel</button>
@@ -646,4 +677,41 @@
     </div>
   }
 
+  <!-- Delete Folder Confirmation Popup -->
+  @if (pendingDeleteFolderName()) {
+    <div class="delete-overlay" (click)="cancelDeleteFolder()">
+      <div class="delete-dialog" (click)="$event.stopPropagation()">
+        <div class="delete-dialog-icon">
+          <md-icon name="delete" [size]="24" />
+        </div>
+        <h3 class="delete-dialog-title">Delete Folder</h3>
+        <p class="delete-dialog-message">
+          Are you sure you want to delete folder <strong>"{{ pendingDeleteFolderName() }}"</strong>? Documents inside will be kept in root pages.
+        </p>
+        <div class="delete-dialog-actions">
+          <button class="delete-dialog-btn cancel" (click)="cancelDeleteFolder()">Cancel</button>
+          <button class="delete-dialog-btn confirm" (click)="confirmDeleteFolder()">Delete</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Batch Delete Confirmation Popup -->
+  @if (isBatchDeleting()) {
+    <div class="delete-overlay" (click)="cancelBatchDelete()">
+      <div class="delete-dialog" (click)="$event.stopPropagation()">
+        <div class="delete-dialog-icon">
+          <md-icon name="delete" [size]="24" />
+        </div>
+        <h3 class="delete-dialog-title">Delete Documents</h3>
+        <p class="delete-dialog-message">
+          Are you sure you want to delete <strong>{{ selectedDocIds().size }} selected document{{ selectedDocIds().size > 1 ? 's' : '' }}</strong>? This action cannot be undone.
+        </p>
+        <div class="delete-dialog-actions">
+          <button class="delete-dialog-btn cancel" (click)="cancelBatchDelete()">Cancel</button>
+          <button class="delete-dialog-btn confirm" (click)="confirmBatchDelete()">Delete</button>
+        </div>
+      </div>
+    </div>
+  }
 </aside>

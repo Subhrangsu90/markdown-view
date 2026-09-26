@@ -209,7 +209,13 @@ export class Editor {
   }
 
   /** Find & Replace handlers */
-  protected onSearchChange({ query, caseSensitive }: { query: string; caseSensitive: boolean }): void {
+  protected onSearchChange({
+    query,
+    caseSensitive,
+  }: {
+    query: string;
+    caseSensitive: boolean;
+  }): void {
     this.lastSearchQuery = query;
     this.lastCaseSensitive = caseSensitive;
     this.performSearch(query, caseSensitive);
@@ -372,6 +378,21 @@ export class Editor {
     th, td { border: 1px solid rgba(255,255,255,0.1); padding: 10px 14px; text-align: left; }
     th { background: rgba(255,255,255,0.05); }
     blockquote { border-left: 3px solid #2383e2; padding: 12px 18px; margin: 20px 0; background: rgba(35,131,226,0.08); border-radius: 0 8px 8px 0; }
+    blockquote.markdown-alert { padding: 14px 18px; margin: 20px 0; border-radius: 6px; }
+    .markdown-alert-title { display: flex; align-items: center; gap: 8px; font-weight: 600; margin-bottom: 8px; }
+    .markdown-alert-title .alert-icon svg { width: 16px; height: 16px; fill: currentColor; }
+    .markdown-alert-content { color: inherit; }
+    .markdown-alert-content p { margin: 6px 0; }
+    .markdown-alert-note { border-left: 3.5px solid #3b82f6; border-top: 1px solid rgba(59,130,246,0.2); border-right: 1px solid rgba(59,130,246,0.2); border-bottom: 1px solid rgba(59,130,246,0.2); background: rgba(59,130,246,0.08); }
+    .markdown-alert-note .markdown-alert-title { color: #60a5fa; }
+    .markdown-alert-tip { border-left: 3.5px solid #22c55e; border-top: 1px solid rgba(34,197,94,0.2); border-right: 1px solid rgba(34,197,94,0.2); border-bottom: 1px solid rgba(34,197,94,0.2); background: rgba(34,197,94,0.08); }
+    .markdown-alert-tip .markdown-alert-title { color: #4ade80; }
+    .markdown-alert-important { border-left: 3.5px solid #a855f7; border-top: 1px solid rgba(168,85,247,0.2); border-right: 1px solid rgba(168,85,247,0.2); border-bottom: 1px solid rgba(168,85,247,0.2); background: rgba(168,85,247,0.08); }
+    .markdown-alert-important .markdown-alert-title { color: #c084fc; }
+    .markdown-alert-warning { border-left: 3.5px solid #f59e0b; border-top: 1px solid rgba(245,158,11,0.2); border-right: 1px solid rgba(245,158,11,0.2); border-bottom: 1px solid rgba(245,158,11,0.2); background: rgba(245,158,11,0.08); }
+    .markdown-alert-warning .markdown-alert-title { color: #fbbf24; }
+    .markdown-alert-caution { border-left: 3.5px solid #ef4444; border-top: 1px solid rgba(239,68,68,0.2); border-right: 1px solid rgba(239,68,68,0.2); border-bottom: 1px solid rgba(239,68,68,0.2); background: rgba(239,68,68,0.08); }
+    .markdown-alert-caution .markdown-alert-title { color: #f87171; }
   </style>
 </head>
 <body>
@@ -398,13 +419,6 @@ export class Editor {
     this.isExportMenuOpen.set(false);
     await this.fileExport.exportAllAsZip(this.store.documents());
     this.notifyUser('Exported all documents as ZIP!');
-  }
-
-  /** Export to PDF via Browser Print */
-  protected exportPdf(): void {
-    if (!this.isBrowser) return;
-    this.isExportMenuOpen.set(false);
-    window.print();
   }
 
   /** Copy Markdown to clipboard */
@@ -493,7 +507,9 @@ export class Editor {
   }
 
   private sanitizeFilename(name: string): string {
-    return name.replace(/[^a-zA-Z0-9_\-\u00C0-\u024F\u1E00-\u1EFF]/g, '_').toLowerCase() || 'document';
+    return (
+      name.replace(/[^a-zA-Z0-9_\-\u00C0-\u024F\u1E00-\u1EFF]/g, '_').toLowerCase() || 'document'
+    );
   }
 
   // Drag & drop handling
@@ -571,7 +587,10 @@ export class Editor {
     } else if (event.key === 'F11') {
       event.preventDefault();
       this.toggleZenMode();
-    } else if (event.key === '?' && !['INPUT', 'TEXTAREA'].includes((event.target as HTMLElement).tagName)) {
+    } else if (
+      event.key === '?' &&
+      !['INPUT', 'TEXTAREA'].includes((event.target as HTMLElement).tagName)
+    ) {
       event.preventDefault();
       this.toggleShortcuts();
     }

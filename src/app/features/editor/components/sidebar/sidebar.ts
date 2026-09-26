@@ -1,13 +1,5 @@
 // Sidebar component - Export & Location setup
-import {
-  Component,
-  inject,
-  input,
-  output,
-  signal,
-  computed,
-  PLATFORM_ID,
-} from '@angular/core';
+import { Component, inject, input, output, signal, computed, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -65,9 +57,11 @@ export class Sidebar {
   protected readonly pendingDeleteTitle = computed(() => {
     const id = this.pendingDeleteId();
     if (!id) return '';
-    const doc = this.store.documents().find(d => d.id === id);
+    const doc = this.store.documents().find((d) => d.id === id);
     return doc?.title || 'Untitled';
   });
+  protected readonly pendingDeleteFolderName = signal<string | null>(null);
+  protected readonly isBatchDeleting = signal<boolean>(false);
 
   // Multi-selection state
   protected readonly selectedDocIds = signal<Set<string>>(new Set());
@@ -94,9 +88,7 @@ export class Sidebar {
     const favs = this.store.favoriteDocuments();
     if (!q) return favs;
     return favs.filter(
-      (d) =>
-        d.title.toLowerCase().includes(q) ||
-        d.content.toLowerCase().includes(q),
+      (d) => d.title.toLowerCase().includes(q) || d.content.toLowerCase().includes(q),
     );
   });
 
@@ -112,9 +104,7 @@ export class Sidebar {
         );
         const filteredDocs = q
           ? folderDocs.filter(
-              (d) =>
-                d.title.toLowerCase().includes(q) ||
-                d.content.toLowerCase().includes(q),
+              (d) => d.title.toLowerCase().includes(q) || d.content.toLowerCase().includes(q),
             )
           : folderDocs;
 
@@ -132,9 +122,7 @@ export class Sidebar {
     const uncat = this.store.uncategorizedDocuments();
     if (!q) return uncat;
     return uncat.filter(
-      (d) =>
-        d.title.toLowerCase().includes(q) ||
-        d.content.toLowerCase().includes(q),
+      (d) => d.title.toLowerCase().includes(q) || d.content.toLowerCase().includes(q),
     );
   });
 
@@ -236,13 +224,20 @@ export class Sidebar {
   protected batchDelete(): void {
     const ids = Array.from(this.selectedDocIds());
     if (ids.length === 0) return;
-    if (this.isBrowser) {
-      const count = ids.length;
-      const confirmed = confirm(`Delete ${count} selected document${count > 1 ? 's' : ''}?`);
-      if (!confirmed) return;
+    this.isBatchDeleting.set(true);
+  }
+
+  protected confirmBatchDelete(): void {
+    const ids = Array.from(this.selectedDocIds());
+    if (ids.length > 0) {
+      this.store.deleteMany(ids);
+      this.clearSelection();
     }
-    this.store.deleteMany(ids);
-    this.clearSelection();
+    this.isBatchDeleting.set(false);
+  }
+
+  protected cancelBatchDelete(): void {
+    this.isBatchDeleting.set(false);
   }
 
   protected batchToggleFavorite(forceFav?: boolean): void {
@@ -278,7 +273,7 @@ export class Sidebar {
 
   protected onDocumentClick(event: MouseEvent): void {
     const target = event.target as HTMLElement;
-    if (!target.closest('.sidebar-menu-wrapper')) {
+    if (!target.closest('.sidebar-menu-wrapper') && !target.closest('.sidebar-dropdown-menu')) {
       this.closeSidebarMenus();
     }
     if (!target.closest('.batch-move-wrapper')) {
@@ -289,6 +284,14 @@ export class Sidebar {
   protected onEscape(): void {
     if (this.pendingDeleteId()) {
       this.cancelDelete();
+      return;
+    }
+    if (this.pendingDeleteFolderName()) {
+      this.cancelDeleteFolder();
+      return;
+    }
+    if (this.isBatchDeleting()) {
+      this.cancelBatchDelete();
       return;
     }
     if (this.isImportMenuOpen() || this.isExportMenuOpen()) {
@@ -333,9 +336,7 @@ export class Sidebar {
     this.closeSidebarMenus();
     const imported = await this.localDir.importFromConnectedDirectory();
     if (imported.length > 0) {
-      const docs = imported.map((item) =>
-        createDocument(item.title, item.content, item.folder),
-      );
+      const docs = imported.map((item) => createDocument(item.title, item.content, item.folder));
       this.store.addDocuments(docs);
     }
   }
@@ -467,14 +468,19 @@ export class Sidebar {
 
   protected deleteFolder(event: Event, folderName: string): void {
     event.stopPropagation();
-    if (this.isBrowser) {
-      const confirmDelete = confirm(`Delete folder "${folderName}"? Documents inside will be kept in root pages.`);
-      if (confirmDelete) {
-        this.store.deleteFolder(folderName, false);
-      }
-    } else {
-      this.store.deleteFolder(folderName, false);
+    this.pendingDeleteFolderName.set(folderName);
+  }
+
+  protected confirmDeleteFolder(): void {
+    const folder = this.pendingDeleteFolderName();
+    if (folder) {
+      this.store.deleteFolder(folder, false);
     }
+    this.pendingDeleteFolderName.set(null);
+  }
+
+  protected cancelDeleteFolder(): void {
+    this.pendingDeleteFolderName.set(null);
   }
 
   protected async exportFolder(event: Event, folderName: string): Promise<void> {
@@ -488,9 +494,8 @@ export class Sidebar {
     this.draggingDocId.set(docId);
 
     const isSelected = this.selectedDocIds().has(docId);
-    const idsToDrag = isSelected && this.selectedDocIds().size > 1
-      ? Array.from(this.selectedDocIds())
-      : [docId];
+    const idsToDrag =
+      isSelected && this.selectedDocIds().size > 1 ? Array.from(this.selectedDocIds()) : [docId];
 
     event.dataTransfer.setData('text/plain', docId);
     event.dataTransfer.setData('application/x-md-doc', docId);

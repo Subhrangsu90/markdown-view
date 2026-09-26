@@ -13,6 +13,51 @@ import { isPlatformBrowser } from '@angular/common';
 import { MarkdownComponent } from 'ngx-markdown';
 import { DocumentStore } from '../../services/document-store';
 
+const ALERT_SVGS: Record<string, string> = {
+  note: '<svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1.5a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"/></svg>',
+  tip: '<svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.25-.095.115-.184.22-.268.319-.18.213-.362.43-.542.681-.207.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5Zm1 3h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1 0-1.5Z"/></svg>',
+  important:
+    '<svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M0 1.75C0 .784.784 0 1.75 0h12.5C15.216 0 16 .784 16 1.75v9.5A1.75 1.75 0 0 1 14.25 13H8.06l-2.573 2.573A1.458 1.458 0 0 1 3 14.543V13H1.75A1.75 1.75 0 0 1 0 11.25Zm1.75-.25a.25.25 0 0 0-.25.25v9.5c0 .138.112.25.25.25h2a.75.75 0 0 1 .75.75v2.19l2.72-2.72a.749.749 0 0 1 .53-.22h6.5a.25.25 0 0 0 .25-.25v-9.5a.25.25 0 0 0-.25-.25Zm7 2.25v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 9a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"/></svg>',
+  warning:
+    '<svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"/></svg>',
+  caution:
+    '<svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M4.47.22A.749.749 0 0 1 5 0h6c.199 0 .389.079.53.22l4.25 4.25c.141.14.22.331.22.53v6a.749.749 0 0 1-.22.53l-4.25 4.25A.749.749 0 0 1 11 16H5a.749.749 0 0 1-.53-.22L.22 11.53A.749.749 0 0 1 0 11V5c0-.199.079-.389.22-.53Zm.84 1.28L1.5 5.31v5.38l3.81 3.81h5.38l3.81-3.81V5.31L10.69 1.5ZM8 4a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 8 4Zm0 8a1 1 0 1 1 0-2 1 1 0 0 1 2 0Z"/></svg>',
+};
+
+const ALERT_TITLES: Record<string, string> = {
+  note: 'Note',
+  tip: 'Tip',
+  important: 'Important',
+  warning: 'Warning',
+  caution: 'Caution',
+  info: 'Note',
+  success: 'Success',
+  done: 'Done',
+  check: 'Done',
+  danger: 'Caution',
+  error: 'Caution',
+  fail: 'Caution',
+  hint: 'Tip',
+  attention: 'Warning',
+};
+
+const ALERT_TYPE_MAP: Record<string, string> = {
+  note: 'note',
+  info: 'note',
+  tip: 'tip',
+  hint: 'tip',
+  success: 'tip',
+  done: 'tip',
+  check: 'tip',
+  important: 'important',
+  warning: 'warning',
+  attention: 'warning',
+  caution: 'caution',
+  danger: 'caution',
+  error: 'caution',
+  fail: 'caution',
+};
+
 @Component({
   selector: 'md-markdown-preview',
   standalone: true,
@@ -113,7 +158,11 @@ export class MarkdownPreview {
       if (!rawHref) return;
 
       // External links
-      if (/^https?:\/\//i.test(rawHref) || rawHref.startsWith('mailto:') || rawHref.startsWith('tel:')) {
+      if (
+        /^https?:\/\//i.test(rawHref) ||
+        rawHref.startsWith('mailto:') ||
+        rawHref.startsWith('tel:')
+      ) {
         link.setAttribute('target', '_blank');
         link.setAttribute('rel', 'noopener noreferrer');
         return;
@@ -165,25 +214,29 @@ export class MarkdownPreview {
       const imgs = Array.from(p.querySelectorAll<HTMLImageElement>('img'));
       if (imgs.length === 0) return;
 
-      const isBadgeContainer = imgs.some((img) => {
-        const src = img.getAttribute('src') || '';
-        const alt = img.getAttribute('alt') || '';
-        return (
-          /shields\.io|badge|badgen|codecov|travis-ci|circleci|workflows\/.*\/badge/i.test(src) ||
-          /license|build|test|coverage|version|npm|prs|stars|status|downloads/i.test(alt)
-        );
-      }) || (
-        p.childNodes.length > 0 &&
-        Array.from(p.childNodes).every((node) => {
-          if (node.nodeType === Node.TEXT_NODE) return !node.textContent?.trim();
-          if (node.nodeType === Node.ELEMENT_NODE) {
-            const el = node as HTMLElement;
-            return el.tagName === 'BR' || el.tagName === 'IMG' || (el.tagName === 'A' && !!el.querySelector('img'));
-          }
-          return false;
-        }) &&
-        imgs.length >= 2
-      );
+      const isBadgeContainer =
+        imgs.some((img) => {
+          const src = img.getAttribute('src') || '';
+          const alt = img.getAttribute('alt') || '';
+          return (
+            /shields\.io|badge|badgen|codecov|travis-ci|circleci|workflows\/.*\/badge/i.test(src) ||
+            /license|build|test|coverage|version|npm|prs|stars|status|downloads/i.test(alt)
+          );
+        }) ||
+        (p.childNodes.length > 0 &&
+          Array.from(p.childNodes).every((node) => {
+            if (node.nodeType === Node.TEXT_NODE) return !node.textContent?.trim();
+            if (node.nodeType === Node.ELEMENT_NODE) {
+              const el = node as HTMLElement;
+              return (
+                el.tagName === 'BR' ||
+                el.tagName === 'IMG' ||
+                (el.tagName === 'A' && !!el.querySelector('img'))
+              );
+            }
+            return false;
+          }) &&
+          imgs.length >= 2);
 
       if (isBadgeContainer) {
         p.classList.add('markdown-badge-row');
@@ -297,28 +350,86 @@ export class MarkdownPreview {
 
     const blockquotes = container.querySelectorAll('blockquote');
     blockquotes.forEach((bq) => {
+      if (bq.classList.contains('markdown-alert') || bq.classList.contains('notion-callout')) {
+        return;
+      }
+
       const firstP = bq.querySelector('p');
       if (!firstP) return;
 
-      const text = firstP.innerHTML.trim();
-      const alertMatch = text.match(/^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]/i);
+      const html = firstP.innerHTML.trim();
+      const alertRegex =
+        /^\s*\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION|INFO|SUCCESS|DONE|CHECK|DANGER|ERROR|FAIL|HINT|ATTENTION)\]([^\n<]*)(?:<br\s*\/?>|\n)?([\s\S]*)$/i;
+      const match = html.match(alertRegex);
 
-      if (alertMatch) {
-        const type = alertMatch[1].toLowerCase();
-        bq.classList.add('notion-callout', `callout-${type}`);
-        firstP.innerHTML = text.replace(/^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]/i, '').trim();
+      if (!match) return;
 
-        const iconDiv = document.createElement('div');
-        iconDiv.className = 'callout-icon';
-        const icons: Record<string, string> = {
-          note: 'ℹ️',
-          tip: '💡',
-          important: '📌',
-          warning: '⚠️',
-          caution: '🚨',
-        };
-        iconDiv.textContent = icons[type] || '💡';
-        bq.insertBefore(iconDiv, bq.firstChild);
+      const rawType = match[1].toLowerCase();
+      const customTitle = match[2]?.trim();
+      const remainder = match[3] ?? '';
+
+      const standardType = ALERT_TYPE_MAP[rawType] || 'note';
+      const defaultTitle = ALERT_TITLES[rawType] || 'Note';
+
+      // Clean leading and trailing <br> tags from remainder
+      let cleanedRemainder = remainder
+        .replace(/^(\s*<br\s*\/?>\s*)+/i, '')
+        .replace(/(\s*<br\s*\/?>\s*)+$/i, '')
+        .trim();
+
+      // Determine display title vs inline content
+      let displayTitle = defaultTitle;
+      if (customTitle) {
+        if (cleanedRemainder || bq.querySelectorAll('p, ul, ol, pre').length > 1) {
+          displayTitle = customTitle;
+        } else {
+          // If only customTitle was provided without subsequent body, use default title and make customTitle the body
+          displayTitle = defaultTitle;
+          cleanedRemainder = customTitle;
+        }
+      }
+
+      const svgIcon = ALERT_SVGS[standardType] || ALERT_SVGS['note'];
+
+      bq.classList.add(
+        'markdown-alert',
+        `markdown-alert-${standardType}`,
+        'notion-callout',
+        `callout-${standardType}`,
+      );
+
+      // Update or remove first paragraph
+      if (cleanedRemainder) {
+        firstP.innerHTML = cleanedRemainder;
+      } else {
+        firstP.remove();
+      }
+
+      // Collect remaining children into content wrapper
+      const contentWrapper = document.createElement('div');
+      contentWrapper.className = 'markdown-alert-content';
+      while (bq.firstChild) {
+        contentWrapper.appendChild(bq.firstChild);
+      }
+
+      // Build alert title row
+      const titleDiv = document.createElement('div');
+      titleDiv.className = 'markdown-alert-title';
+
+      const iconSpan = document.createElement('span');
+      iconSpan.className = 'alert-icon';
+      iconSpan.innerHTML = svgIcon;
+
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'alert-name';
+      nameSpan.textContent = displayTitle;
+
+      titleDiv.appendChild(iconSpan);
+      titleDiv.appendChild(nameSpan);
+
+      bq.appendChild(titleDiv);
+      if (contentWrapper.hasChildNodes()) {
+        bq.appendChild(contentWrapper);
       }
     });
   }
@@ -376,7 +487,8 @@ export class MarkdownPreview {
     try {
       const mermaidModule = await import('mermaid');
       const mermaid = mermaidModule.default ?? mermaidModule;
-      const isDark = document.documentElement.classList.contains('dark') ||
+      const isDark =
+        document.documentElement.classList.contains('dark') ||
         window.matchMedia('(prefers-color-scheme: dark)').matches;
 
       mermaid.initialize({
@@ -425,7 +537,9 @@ export class MarkdownPreview {
       }
 
       // 1. Math code blocks (```math or ```latex)
-      const mathCodes = container.querySelectorAll<HTMLElement>('code.language-math, code.language-latex');
+      const mathCodes = container.querySelectorAll<HTMLElement>(
+        'code.language-math, code.language-latex',
+      );
       mathCodes.forEach((codeEl) => {
         const pre = codeEl.closest('pre');
         if (pre && !pre.dataset['mathRendered']) {
@@ -445,7 +559,7 @@ export class MarkdownPreview {
       // 2. Block math ($$ ... $$)
       const blockMathRegex = /\$\$([\s\S]+?)\$\$/g;
       const blockCandidates = Array.from(
-        container.querySelectorAll<HTMLElement>('p, blockquote, li, td, th')
+        container.querySelectorAll<HTMLElement>('p, blockquote, li, td, th'),
       );
 
       for (const el of blockCandidates) {
@@ -504,27 +618,23 @@ export class MarkdownPreview {
       // 3. Inline math ($ ... $)
       const inlineMathRegex = /(^|[^\\])\$([^\s\$](?:[^\$\n\r]*?[^\s\$])?)\$/g;
 
-      const walker = document.createTreeWalker(
-        container,
-        NodeFilter.SHOW_TEXT,
-        {
-          acceptNode(node) {
-            const parent = node.parentElement;
-            if (!parent) return NodeFilter.FILTER_REJECT;
-            const tag = parent.tagName.toLowerCase();
-            if (['pre', 'code', 'script', 'style', 'textarea', 'input'].includes(tag)) {
-              return NodeFilter.FILTER_REJECT;
-            }
-            if (parent.closest('.katex, .katex-block-wrapper, .mermaid-diagram-card')) {
-              return NodeFilter.FILTER_REJECT;
-            }
-            if (node.nodeValue && node.nodeValue.includes('$')) {
-              return NodeFilter.FILTER_ACCEPT;
-            }
-            return NodeFilter.FILTER_SKIP;
+      const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, {
+        acceptNode(node) {
+          const parent = node.parentElement;
+          if (!parent) return NodeFilter.FILTER_REJECT;
+          const tag = parent.tagName.toLowerCase();
+          if (['pre', 'code', 'script', 'style', 'textarea', 'input'].includes(tag)) {
+            return NodeFilter.FILTER_REJECT;
           }
-        }
-      );
+          if (parent.closest('.katex, .katex-block-wrapper, .mermaid-diagram-card')) {
+            return NodeFilter.FILTER_REJECT;
+          }
+          if (node.nodeValue && node.nodeValue.includes('$')) {
+            return NodeFilter.FILTER_ACCEPT;
+          }
+          return NodeFilter.FILTER_SKIP;
+        },
+      });
 
       const replacements: { node: Text; fragment: DocumentFragment }[] = [];
       let textNode = walker.nextNode() as Text | null;
@@ -551,7 +661,9 @@ export class MarkdownPreview {
 
             hasInline = true;
             if (matchStart > lastIndex) {
-              frag.appendChild(document.createTextNode(text.slice(lastIndex, match.index) + prefix));
+              frag.appendChild(
+                document.createTextNode(text.slice(lastIndex, match.index) + prefix),
+              );
             } else if (prefix) {
               frag.appendChild(document.createTextNode(prefix));
             }
