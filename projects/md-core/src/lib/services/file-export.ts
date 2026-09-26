@@ -1,11 +1,13 @@
 import { Injectable, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { MarkdownDocument } from '../models/document.model';
+import { IndexedDbService } from './indexed-db.service';
 
 @Injectable({ providedIn: 'root' })
 export class FileExportService {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly isBrowser = isPlatformBrowser(this.platformId);
+  private readonly indexedDb = inject(IndexedDbService);
 
   /** Export all documents as a structured ZIP archive preserving folders */
   async exportAllAsZip(
@@ -41,6 +43,16 @@ export class FileExportService {
       usedPaths.add(finalPath.toLowerCase());
 
       zip.file(finalPath, doc.content || '');
+    }
+
+    // Bundle all stored media assets (images) into the ZIP archive
+    try {
+      const allAssets = await this.indexedDb.getAllAssets();
+      for (const asset of allAssets) {
+        zip.file(asset.name, asset.blob);
+      }
+    } catch (e) {
+      console.warn('Could not bundle assets in ZIP export:', e);
     }
 
     const blob = await zip.generateAsync({ type: 'blob' });
@@ -80,9 +92,50 @@ export class FileExportService {
       zip.file(finalPath, doc.content || '');
     }
 
+    try {
+      const allAssets = await this.indexedDb.getAllAssets();
+      for (const asset of allAssets) {
+        if (folderDocs.some((d) => d.content.includes(asset.name))) {
+          zip.file(asset.name, asset.blob);
+        }
+      }
+    } catch {}
+
     const blob = await zip.generateAsync({ type: 'blob' });
     const cleanFolderName = this.sanitizeName(folderName) || 'folder';
     this.downloadBlob(blob, `${cleanFolderName}.zip`);
+  }
+
+  /** Export a single document and its referenced assets bundled as a ZIP (Obsidian format) */
+  async exportDocumentAsZip(doc: MarkdownDocument): Promise<void> {
+    if (!this.isBrowser || !doc) return;
+
+    const JSZipModule = await import('jszip');
+    const JSZip = (JSZipModule as any).default || JSZipModule;
+    const zip = new JSZip();
+
+    const sanitizedTitle = this.sanitizeName(doc.title || 'Untitled');
+    zip.file(`${sanitizedTitle}.md`, doc.content || '');
+
+    try {
+      const allAssets = await this.indexedDb.getAllAssets();
+      for (const asset of allAssets) {
+        if (doc.content?.includes(asset.name)) {
+          zip.file(asset.name, asset.blob);
+        }
+      }
+    } catch {}
+
+    const blob = await zip.generateAsync({ type: 'blob' });
+    this.downloadBlob(blob, `${sanitizedTitle}.zip`);
+  }
+
+  /** Export a single document as standalone Markdown with Base64 embedded images */
+  async exportDocumentWithEmbeddedAssets(doc: MarkdownDocument): Promise<void> {
+    if (!this.isBrowser || !doc) return;
+    const embeddedContent = await this.indexedDb.replaceAssetReferencesWithBase64(doc.content || '');
+    const blob = new Blob([embeddedContent], { type: 'text/markdown;charset=utf-8' });
+    this.downloadBlob(blob, `${this.sanitizeName(doc.title || 'Untitled')}.md`);
   }
 
   /** Download a blob as a file in the browser */

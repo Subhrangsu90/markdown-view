@@ -3,6 +3,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { MarkdownDocument, createDocument } from '../models/document.model';
 import { extractDocumentTags, setFrontmatterProperty, parseFrontmatter } from '../models/frontmatter.util';
 import { DocumentHistoryService } from './document-history.service';
+import { IndexedDbService } from './indexed-db.service';
 
 const STORAGE_KEY = 'md-view-documents';
 const ACTIVE_KEY = 'md-view-active-id';
@@ -13,15 +14,16 @@ export class DocumentStore {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly isBrowser = isPlatformBrowser(this.platformId);
   private readonly historyService = inject(DocumentHistoryService);
+  private readonly indexedDb = inject(IndexedDbService);
 
   /** All documents */
-  private readonly _documents = signal<MarkdownDocument[]>(this.loadDocuments());
+  private readonly _documents = signal<MarkdownDocument[]>(this.loadLegacyDocuments());
 
   /** ID of the active document */
-  private readonly _activeId = signal<string | null>(this.loadActiveId());
+  private readonly _activeId = signal<string | null>(this.loadLegacyActiveId());
 
   /** User-created and imported folders */
-  private readonly _customFolders = signal<string[]>(this.loadFolders());
+  private readonly _customFolders = signal<string[]>(this.loadLegacyFolders());
 
   /** Public readonly signals */
   readonly documents = this._documents.asReadonly();
@@ -102,42 +104,86 @@ export class DocumentStore {
   });
 
   constructor() {
-    // Auto-persist documents to localStorage
+    // Auto-persist documents to IndexedDB
     effect(() => {
       const docs = this._documents();
       if (this.isBrowser) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(docs));
+        this.indexedDb.saveAllDocuments(docs).catch(console.error);
       }
     });
 
-    // Auto-persist activeId to localStorage
+    // Auto-persist activeId to IndexedDB
     effect(() => {
       const id = this._activeId();
       if (this.isBrowser) {
-        if (id) {
-          localStorage.setItem(ACTIVE_KEY, id);
-        } else {
-          localStorage.removeItem(ACTIVE_KEY);
-        }
+        this.indexedDb.setSetting('activeId', id).catch(console.error);
       }
     });
 
-    // Auto-persist folders to localStorage
+    // Auto-persist folders to IndexedDB
     effect(() => {
       const f = this._customFolders();
       if (this.isBrowser) {
-        localStorage.setItem(FOLDERS_KEY, JSON.stringify(f));
+        this.indexedDb.setSetting('folders', f).catch(console.error);
       }
     });
 
-    // If no documents exist, create a welcome document
-    if (this._documents().length === 0) {
-      const welcome = createDocument('Welcome', WELCOME_CONTENT);
-      this._documents.set([welcome]);
-      this._activeId.set(welcome.id);
-    } else if (!this._activeId()) {
-      // Select the first document if none is active
-      this._activeId.set(this._documents()[0]?.id ?? null);
+    if (this.isBrowser) {
+      this.initFromIndexedDb();
+    }
+  }
+
+  private async initFromIndexedDb(): Promise<void> {
+    try {
+      const dbDocs = await this.indexedDb.getAllDocuments();
+      if (dbDocs && dbDocs.length > 0) {
+        this._documents.set(dbDocs);
+        const dbFolders = await this.indexedDb.getSetting<string[]>('folders');
+        if (dbFolders && Array.isArray(dbFolders)) {
+          this._customFolders.set(dbFolders);
+        }
+        const dbActive = await this.indexedDb.getSetting<string>('activeId');
+        if (dbActive && dbDocs.some((d) => d.id === dbActive)) {
+          this._activeId.set(dbActive);
+        } else if (dbDocs.length > 0) {
+          this._activeId.set(dbDocs[0].id);
+        }
+        return;
+      }
+
+      // One-time legacy localStorage migration
+      const legacyDocs = this.loadLegacyDocuments();
+      if (legacyDocs.length > 0) {
+        this._documents.set(legacyDocs);
+        await this.indexedDb.saveAllDocuments(legacyDocs);
+        const legacyFolders = this.loadLegacyFolders();
+        if (legacyFolders.length > 0) {
+          this._customFolders.set(legacyFolders);
+          await this.indexedDb.setSetting('folders', legacyFolders);
+        }
+        const legacyActive = this.loadLegacyActiveId();
+        if (legacyActive) {
+          this._activeId.set(legacyActive);
+          await this.indexedDb.setSetting('activeId', legacyActive);
+        }
+        try {
+          localStorage.removeItem(STORAGE_KEY);
+          localStorage.removeItem(FOLDERS_KEY);
+          localStorage.removeItem(ACTIVE_KEY);
+        } catch {}
+        return;
+      }
+
+      // Fresh initialization: Create welcome document
+      if (this._documents().length === 0) {
+        const welcome = createDocument('Welcome', WELCOME_CONTENT);
+        this._documents.set([welcome]);
+        this._activeId.set(welcome.id);
+        await this.indexedDb.saveDocument(welcome);
+        await this.indexedDb.setSetting('activeId', welcome.id);
+      }
+    } catch (e) {
+      console.warn('[DocumentStore] IndexedDB initialization error:', e);
     }
   }
 
@@ -380,6 +426,7 @@ export class DocumentStore {
   delete(id: string): void {
     this._documents.update((docs) => docs.filter((d) => d.id !== id));
     this.historyService.deleteHistory(id);
+    this.indexedDb.deleteDocument(id).catch(console.error);
     if (this._activeId() === id) {
       this._activeId.set(this._documents()[0]?.id ?? null);
     }
@@ -615,7 +662,7 @@ export class DocumentStore {
     return partialMatch ?? null;
   }
 
-  private loadDocuments(): MarkdownDocument[] {
+  private loadLegacyDocuments(): MarkdownDocument[] {
     if (!this.isBrowser) return [];
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -625,7 +672,7 @@ export class DocumentStore {
     }
   }
 
-  private loadFolders(): string[] {
+  private loadLegacyFolders(): string[] {
     if (!this.isBrowser) return [];
     try {
       const raw = localStorage.getItem(FOLDERS_KEY);
@@ -635,7 +682,7 @@ export class DocumentStore {
     }
   }
 
-  private loadActiveId(): string | null {
+  private loadLegacyActiveId(): string | null {
     if (!this.isBrowser) return null;
     return localStorage.getItem(ACTIVE_KEY);
   }

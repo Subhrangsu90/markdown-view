@@ -16,6 +16,7 @@ export * from './lib/services/markdown.config';
 export * from './lib/services/theme.service';
 export * from './lib/services/encryption.service';
 export * from './lib/services/document-history.service';
+export * from './lib/services/indexed-db.service';
 
 // Components
 export * from './lib/components/toolbar/toolbar';

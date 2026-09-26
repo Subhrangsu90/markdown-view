@@ -9,6 +9,8 @@ import {
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 
+import { IndexedDbService } from './indexed-db.service';
+
 export type Theme = 'dark' | 'light' | 'system';
 export type ResolvedTheme = 'dark' | 'light';
 
@@ -19,6 +21,7 @@ export class ThemeService {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly isBrowser = isPlatformBrowser(this.platformId);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly indexedDb = inject(IndexedDbService);
 
   /** User preference: 'dark', 'light', or 'system' */
   private readonly _theme = signal<Theme>(this.getInitialTheme());
@@ -43,6 +46,15 @@ export class ThemeService {
 
   constructor() {
     if (this.isBrowser) {
+      // Async load from IndexedDB settings store
+      this.indexedDb.getSetting<Theme>('theme').then((savedTheme) => {
+        if (savedTheme && (savedTheme === 'dark' || savedTheme === 'light' || savedTheme === 'system')) {
+          if (savedTheme !== this._theme()) {
+            this._theme.set(savedTheme);
+          }
+        }
+      }).catch(() => {});
+
       // Listen for system theme changes
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
       const listener = (e: MediaQueryListEvent) => {
@@ -54,12 +66,17 @@ export class ThemeService {
         mediaQuery.removeEventListener('change', listener);
       });
 
-      // Synchronize DOM attributes and localStorage
+      // Synchronize DOM attributes, localStorage and IndexedDB
       effect(() => {
         const theme = this._theme();
         const resolved = this.resolvedTheme();
 
-        localStorage.setItem(THEME_STORAGE_KEY, theme);
+        try {
+          localStorage.setItem(THEME_STORAGE_KEY, theme);
+        } catch {
+          // ignore
+        }
+        this.indexedDb.setSetting('theme', theme).catch(() => {});
 
         const root = document.documentElement;
         root.setAttribute('data-theme', resolved);

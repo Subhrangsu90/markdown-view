@@ -272,13 +272,27 @@
                   <md-icon name="file" [size]="14" />
                   <span>Download Markdown (.md)</span>
                 </button>
+                @if (activeDocHasImages()) {
+                  <button class="export-item" (click)="exportDocumentZip()">
+                    <md-icon name="zip" [size]="14" />
+                    <span>Download Doc + Images (.zip)</span>
+                  </button>
+                  <button class="export-item" (click)="exportMarkdownStandalone()">
+                    <md-icon name="file" [size]="14" />
+                    <span>Download Standalone .md (Embedded Images)</span>
+                  </button>
+                }
                 <button class="export-item" (click)="exportHtml()">
                   <md-icon name="html" [size]="14" />
-                  <span>Download Standalone HTML</span>
+                  <span>Download Standalone HTML (with Images)</span>
                 </button>
                 <button class="export-item" (click)="copyMarkdown()">
                   <md-icon name="copy" [size]="14" />
                   <span>Copy Raw Markdown</span>
+                </button>
+                <button class="export-item" (click)="copyRichFormatted()">
+                  <md-icon name="copy" [size]="14" />
+                  <span>Copy Formatted (with Images)</span>
                 </button>
 
                 @if (localDir.isSupported()) {

@@ -1,6 +1,7 @@
 import { Injectable, inject, PLATFORM_ID, signal, computed } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { MarkdownDocument } from '../models/document.model';
+import { IndexedDbService } from './indexed-db.service';
 
 const DB_NAME = 'markdownview_fs_db';
 const STORE_NAME = 'handles';
@@ -11,6 +12,7 @@ const LOCAL_STORAGE_DIR_KEY = 'md_local_directory_name';
 export class LocalDirectoryService {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly isBrowser = isPlatformBrowser(this.platformId);
+  private readonly indexedDb = inject(IndexedDbService);
 
   /** Active directory handle in memory */
   private dirHandle: any = null;
@@ -101,6 +103,27 @@ export class LocalDirectoryService {
       const writable = await fileHandle.createWritable();
       await writable.write(doc.content || '');
       await writable.close();
+
+      // Also save any referenced assets to the workspace 'assets' folder
+      const assetMatches = doc.content?.match(/assets\/[a-zA-Z0-9_\-\.]+\.(?:png|jpe?g|gif|webp|svg|avif|bmp|ico)/gi);
+      if (assetMatches && assetMatches.length > 0) {
+        try {
+          const assetsDir = await handle.getDirectoryHandle('assets', { create: true });
+          for (const match of new Set(assetMatches)) {
+            const assetFileName = match.replace(/^assets[\/\\]/, '');
+            const blob = await this.indexedDb.getAsset(match);
+            if (blob) {
+              const assetFileHandle = await assetsDir.getFileHandle(assetFileName, { create: true });
+              const assetWritable = await assetFileHandle.createWritable();
+              await assetWritable.write(blob);
+              await assetWritable.close();
+            }
+          }
+        } catch (assetErr) {
+          console.warn('Could not save referenced assets to local directory:', assetErr);
+        }
+      }
+
       return true;
     } catch (err) {
       console.error('Failed to save document to local directory:', err);

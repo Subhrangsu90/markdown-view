@@ -37,9 +37,10 @@ export class HistoryModal {
     effect(() => {
       const doc = this.activeDoc();
       if (doc) {
-        const list = this.historyService.getSnapshots(doc.id);
-        this.snapshots.set(list);
-        this.selectedSnapshot.set(list[0] ?? null);
+        this.historyService.loadSnapshotsAsync(doc.id).then((list) => {
+          this.snapshots.set(list);
+          this.selectedSnapshot.set(list[0] ?? null);
+        });
       } else {
         this.snapshots.set([]);
         this.selectedSnapshot.set(null);

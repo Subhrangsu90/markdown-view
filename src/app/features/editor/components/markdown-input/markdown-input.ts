@@ -7,8 +7,9 @@ import {
   ElementRef,
   computed,
   signal,
+  inject,
 } from '@angular/core';
-import { ToolbarAction } from 'md-core';
+import { ToolbarAction, IndexedDbService } from 'md-core';
 
 export interface SlashTriggerEvent {
   active: boolean;
@@ -23,6 +24,8 @@ export interface SlashTriggerEvent {
   styleUrl: './markdown-input.css',
 })
 export class MarkdownInput {
+  private readonly indexedDb = inject(IndexedDbService);
+
   readonly content = input<string>('');
   readonly toolbarAction = input<ToolbarAction | null>(null);
   readonly contentChange = output<string>();
@@ -224,14 +227,10 @@ export class MarkdownInput {
         const file = item.getAsFile();
         if (file) {
           event.preventDefault();
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            const dataUrl = e.target?.result as string;
-            if (dataUrl) {
-              this.insertImageMarkdown(dataUrl, `Pasted image ${new Date().toLocaleTimeString()}`);
-            }
-          };
-          reader.readAsDataURL(file);
+          this.indexedDb.saveAsset(file).then((assetPath) => {
+            const timeStr = new Date().toLocaleTimeString();
+            this.insertImageMarkdown(assetPath, `Pasted image ${timeStr}`);
+          });
           return;
         }
       }
@@ -278,14 +277,9 @@ export class MarkdownInput {
       event.preventDefault();
       event.stopPropagation();
       for (const file of imageFiles) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const dataUrl = e.target?.result as string;
-          if (dataUrl) {
-            this.insertImageMarkdown(dataUrl, file.name);
-          }
-        };
-        reader.readAsDataURL(file);
+        this.indexedDb.saveAsset(file, file.name ? `assets/${file.name}` : undefined).then((assetPath) => {
+          this.insertImageMarkdown(assetPath, file.name || 'image');
+        });
       }
     }
   }

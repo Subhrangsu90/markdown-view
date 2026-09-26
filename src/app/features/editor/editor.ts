@@ -20,6 +20,7 @@ import {
   TocHeading,
   FileExportService,
   LocalDirectoryService,
+  IndexedDbService,
   MdIcon,
   DOCUMENT_ICON_PALETTE,
   resolveIconName,
@@ -80,8 +81,15 @@ export class Editor {
   protected readonly fileImport = inject(FileImportService);
   protected readonly fileExport = inject(FileExportService);
   protected readonly localDir = inject(LocalDirectoryService);
+  protected readonly indexedDb = inject(IndexedDbService);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly isBrowser = isPlatformBrowser(this.platformId);
+
+  /** Whether active document contains local IndexedDB images */
+  protected readonly activeDocHasImages = computed(() => {
+    const content = this.store.activeDocument()?.content;
+    return !!content && /assets\/[a-zA-Z0-9_\-\.]+\.(?:png|jpe?g|gif|webp|svg|avif|bmp|ico)/i.test(content);
+  });
 
   protected readonly isMobile = signal(this.detectIsMobile());
   protected readonly viewMode = signal<ViewMode>(this.detectIsMobile() ? 'edit' : 'split');
@@ -408,7 +416,7 @@ export class Editor {
     this.store.updateIcon(docId, DOCUMENT_ICON_PALETTE[nextIndex]);
   }
 
-  /** Export as Markdown file */
+  /** Export as Markdown file (standard clean relative paths) */
   protected exportMarkdown(): void {
     if (!this.isBrowser) return;
     const doc = this.store.activeDocument();
@@ -425,13 +433,42 @@ export class Editor {
     this.notifyUser('Exported as Markdown!');
   }
 
-  /** Export as styled standalone HTML */
-  protected exportHtml(): void {
+  /** Export document and referenced images as a ZIP archive (Obsidian format) */
+  protected async exportDocumentZip(): Promise<void> {
     if (!this.isBrowser) return;
     const doc = this.store.activeDocument();
     if (!doc) return;
 
-    const renderedBody = this.previewComponent()?.getRenderedHtml() ?? '';
+    this.isExportMenuOpen.set(false);
+    await this.fileExport.exportDocumentAsZip(doc);
+    this.notifyUser('Exported document & images as ZIP!');
+  }
+
+  /** Export document as standalone Markdown with Base64 embedded images */
+  protected async exportMarkdownStandalone(): Promise<void> {
+    if (!this.isBrowser) return;
+    const doc = this.store.activeDocument();
+    if (!doc) return;
+
+    this.isExportMenuOpen.set(false);
+    await this.fileExport.exportDocumentWithEmbeddedAssets(doc);
+    this.notifyUser('Exported standalone Markdown with embedded images!');
+  }
+
+  /** Export as styled standalone HTML with self-contained embedded images */
+  protected async exportHtml(): Promise<void> {
+    if (!this.isBrowser) return;
+    const doc = this.store.activeDocument();
+    if (!doc) return;
+
+    let renderedBody = this.previewComponent()?.getRenderedHtml() ?? '';
+    // Automatically embed any local IndexedDB image assets as Base64 so the HTML file is 100% self-contained
+    try {
+      renderedBody = await this.indexedDb.replaceAssetReferencesWithBase64(renderedBody);
+    } catch (e) {
+      console.warn('Failed to embed assets in HTML export:', e);
+    }
+
     const fullHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -455,6 +492,12 @@ export class Editor {
     .content {
       max-width: 860px;
       margin: 0 auto;
+    }
+    img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      margin: 16px 0;
     }
     a { color: #2383e2; text-decoration: underline; }
     pre { background: #1c1c1c; border-radius: 8px; padding: 16px; overflow-x: auto; }
@@ -495,7 +538,7 @@ export class Editor {
     link.click();
     URL.revokeObjectURL(url);
     this.isExportMenuOpen.set(false);
-    this.notifyUser('Exported as HTML!');
+    this.notifyUser('Exported as standalone HTML with embedded images!');
   }
 
   /** Export all documents as a structured ZIP archive preserving folders */
@@ -516,6 +559,33 @@ export class Editor {
       this.isExportMenuOpen.set(false);
       this.notifyUser('Copied Markdown to clipboard!');
     });
+  }
+
+  /** Copy formatted rich text with images to clipboard (for pasting into Word/Docs/Email) */
+  protected async copyRichFormatted(): Promise<void> {
+    if (!this.isBrowser) return;
+    const doc = this.store.activeDocument();
+    if (!doc) return;
+
+    try {
+      let html = this.previewComponent()?.getRenderedHtml() ?? '';
+      html = await this.indexedDb.replaceAssetReferencesWithBase64(html);
+
+      const blobHtml = new Blob([html], { type: 'text/html' });
+      const blobText = new Blob([doc.content], { type: 'text/plain' });
+      const item = new ClipboardItem({
+        'text/html': blobHtml,
+        'text/plain': blobText,
+      });
+
+      await navigator.clipboard.write([item]);
+      this.isExportMenuOpen.set(false);
+      this.notifyUser('Copied formatted document with images to clipboard!');
+    } catch {
+      await navigator.clipboard.writeText(doc.content);
+      this.isExportMenuOpen.set(false);
+      this.notifyUser('Copied to clipboard!');
+    }
   }
 
   /** Set or change the local computer folder location */

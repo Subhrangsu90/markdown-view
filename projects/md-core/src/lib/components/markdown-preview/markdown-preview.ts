@@ -14,6 +14,7 @@ import { isPlatformBrowser, KeyValuePipe } from '@angular/common';
 import { MarkdownComponent } from 'ngx-markdown';
 import { DocumentStore } from '../../services/document-store';
 import { parseFrontmatter } from '../../models/frontmatter.util';
+import { IndexedDbService } from '../../services/indexed-db.service';
 
 const ALERT_SVGS: Record<string, string> = {
   note: '<svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1.5a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"/></svg>',
@@ -72,6 +73,7 @@ export class MarkdownPreview {
   private readonly hostRef = inject(ElementRef<HTMLElement>);
   private readonly isBrowser = isPlatformBrowser(this.platformId);
   private readonly store = inject(DocumentStore);
+  private readonly indexedDb = inject(IndexedDbService);
   protected readonly previewContainer = viewChild<ElementRef<HTMLElement>>('previewContainer');
 
   readonly content = input<string>('');
@@ -87,7 +89,7 @@ export class MarkdownPreview {
     const { data, body } = parseFrontmatter(raw);
 
     // Transform [[Title]] and [[Title|Alias]] into [Alias](wikilink:Title)
-    const wikilinkTransformed = body.replace(
+    let processed = body.replace(
       /\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g,
       (_, title, alias) => {
         const text = (alias || title).trim();
@@ -96,9 +98,20 @@ export class MarkdownPreview {
       },
     );
 
+    // Pre-resolve any known cached asset blob URLs
+    if (this.isBrowser) {
+      processed = processed.replace(
+        /!\[(.*?)\]\((assets\/[^)\s]+)\)/g,
+        (match, alt, assetPath) => {
+          const cachedUrl = this.indexedDb.getCachedBlobUrl(assetPath);
+          return cachedUrl ? `![${alt}](${cachedUrl})` : match;
+        },
+      );
+    }
+
     return {
       frontmatter: Object.keys(data).length > 0 ? data : null,
-      body: wikilinkTransformed,
+      body: processed,
     };
   });
 
@@ -150,8 +163,29 @@ export class MarkdownPreview {
     this.enhanceLinksAndHeadings();
     this.enhanceBadges();
     this.enhanceTags();
+    await this.resolveAssetImages();
     await this.enhanceMermaid();
     await this.enhanceMath();
+  }
+
+  /**
+   * Resolves any local assets/ stored in IndexedDB and assigns their Object URL.
+   */
+  private async resolveAssetImages(): Promise<void> {
+    const container = this.previewContainer()?.nativeElement;
+    if (!container) return;
+
+    const images = container.querySelectorAll<HTMLImageElement>('img');
+    for (let i = 0; i < images.length; i++) {
+      const img = images[i];
+      const src = img.getAttribute('src');
+      if (src && src.startsWith('assets/')) {
+        const blobUrl = await this.indexedDb.getAssetBlobUrl(src);
+        if (blobUrl) {
+          img.src = blobUrl;
+        }
+      }
+    }
   }
 
   /**
