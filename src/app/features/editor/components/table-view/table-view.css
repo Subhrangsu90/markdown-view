@@ -1,0 +1,133 @@
+.table-container {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background: var(--surface-bg);
+  padding: 24px 32px;
+}
+
+.table-scroll-wrapper {
+  height: 100%;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-card);
+  box-shadow: var(--shadow-sm);
+}
+
+.database-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+  text-align: left;
+}
+
+.database-table thead {
+  background: var(--surface-hover);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  border-bottom: 1px solid var(--border);
+}
+
+.database-table th {
+  padding: 10px 16px;
+  font-weight: 650;
+  color: var(--text-tertiary);
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.table-row {
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background-color 0.12s;
+}
+
+.table-row:hover {
+  background: var(--surface-hover);
+}
+
+.database-table td {
+  padding: 11px 16px;
+  color: var(--text-primary);
+  vertical-align: middle;
+}
+
+.title-cell-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 550;
+}
+
+.title-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status-select {
+  background: var(--surface-hover);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 12px;
+  color: var(--text-primary);
+  outline: none;
+  cursor: pointer;
+}
+
+.folder-badge {
+  background: var(--surface-hover);
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.tags-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.tag-pill {
+  font-size: 11px;
+  background: rgba(99, 102, 241, 0.1);
+  color: var(--primary);
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+
+.empty-cell {
+  color: var(--text-tertiary);
+}
+
+.cell-words,
+.cell-date {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.add-row {
+  cursor: pointer;
+}
+
+.add-row:hover {
+  background: var(--surface-hover);
+}
+
+.add-row-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-tertiary);
+  padding: 8px 4px;
+  font-size: 13px;
+}
+
+.add-row:hover .add-row-content {
+  color: var(--primary);
+}

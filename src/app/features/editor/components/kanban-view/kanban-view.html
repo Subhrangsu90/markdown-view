@@ -1,0 +1,70 @@
+<div class="kanban-container">
+  <!-- Kanban Board Columns -->
+  <div class="kanban-board">
+    @for (col of columns(); track col.id) {
+      <div
+        class="kanban-column"
+        [class.drag-hover]="hoveredColumnId() === col.id"
+        (dragover)="onDragOver($event, col.id)"
+        (dragleave)="onDragLeave($event, col.id)"
+        (drop)="onDrop($event, col.id)"
+      >
+        <!-- Column Header -->
+        <div class="column-header">
+          <div class="header-badge">
+            <span class="status-indicator" [style.background-color]="col.color"></span>
+            <h3>{{ col.title }}</h3>
+            <span class="card-count">{{ (columnCards().get(col.id) || []).length }}</span>
+          </div>
+          <button class="add-card-btn" (click)="addCardToColumn(col.id)" title="Add card to {{ col.title }}">
+            <md-icon name="plus" [size]="14" />
+          </button>
+        </div>
+
+        <!-- Cards List -->
+        <div class="cards-list">
+          @for (doc of columnCards().get(col.id) || []; track doc.id) {
+            <div
+              class="kanban-card"
+              [class.is-dragging]="activeDraggedId() === doc.id"
+              draggable="true"
+              (dragstart)="onDragStart($event, doc.id)"
+              (dragend)="onDragEnd($event)"
+              (click)="selectDoc(doc.id)"
+            >
+              <div class="card-title-row">
+                <md-icon [name]="doc.icon || 'document'" [size]="14" />
+                <h4 class="card-title">{{ doc.title }}</h4>
+              </div>
+
+              @if (getDocTags(doc); as tags) {
+                @if (tags.length > 0) {
+                  <div class="card-tags">
+                    @for (t of tags.slice(0, 3); track t) {
+                      <span class="tag-chip">#{{ t }}</span>
+                    }
+                    @if (tags.length > 3) {
+                      <span class="tag-chip more">+{{ tags.length - 3 }}</span>
+                    }
+                  </div>
+                }
+              }
+
+              <div class="card-footer">
+                @if (doc.folder) {
+                  <span class="card-folder">{{ doc.folder }}</span>
+                }
+                <span class="card-time">{{ doc.updatedAt | timeAgo }}</span>
+              </div>
+            </div>
+          }
+
+          <button class="column-add-footer" (click)="addCardToColumn(col.id)">
+            <md-icon name="plus" [size]="13" />
+            <span>New item</span>
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+</div>

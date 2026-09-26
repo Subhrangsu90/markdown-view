@@ -1,0 +1,75 @@
+<div class="history-backdrop" (click)="close.emit()">
+  <div class="history-modal" (click)="$event.stopPropagation()">
+    <!-- Top Header -->
+    <header class="history-header">
+      <div class="header-left">
+        <md-icon name="history" [size]="18" />
+        <h2>Version History — "{{ activeDoc()?.title }}"</h2>
+      </div>
+      <button class="icon-btn close-btn" (click)="close.emit()" title="Close (Esc)">
+        <md-icon name="close" [size]="18" />
+      </button>
+    </header>
+
+    <!-- Main Content Area: Sidebar of Snapshots + Preview -->
+    <div class="history-body">
+      <!-- Snapshots list -->
+      <aside class="snapshots-sidebar">
+        <div class="snapshots-title">SAVED VERSIONS ({{ snapshots().length }})</div>
+        @if (snapshots().length === 0) {
+          <div class="no-history-hint">
+            <p>No snapshots yet.</p>
+            <small>Snapshots are automatically recorded periodically as you write.</small>
+          </div>
+        } @else {
+          <div class="snapshots-list">
+            @for (s of snapshots(); track s.id; let idx = $index) {
+              <button
+                class="snapshot-item"
+                [class.active]="selectedSnapshot()?.id === s.id"
+                (click)="selectSnapshot(s)"
+              >
+                <div class="snapshot-time">
+                  <strong>{{ s.timestamp | timeAgo }}</strong>
+                  <span class="exact-time">{{ s.timestamp | date:'shortTime' }}</span>
+                </div>
+                <div class="snapshot-meta">
+                  <span>{{ s.wordCount }} words</span>
+                  <span>{{ s.charCount }} chars</span>
+                  @if (idx === 0) {
+                    <span class="badge-latest">Latest</span>
+                  }
+                </div>
+              </button>
+            }
+          </div>
+        }
+      </aside>
+
+      <!-- Snapshot Preview -->
+      <main class="snapshot-preview">
+        @if (selectedSnapshot(); as s) {
+          <div class="preview-toolbar">
+            <div class="preview-info">
+              <span>Recorded: <strong>{{ s.timestamp | date:'medium' }}</strong></span>
+              <span>({{ s.wordCount }} words)</span>
+            </div>
+            <button class="restore-btn" (click)="restoreVersion(s)">
+              <md-icon name="history" [size]="14" />
+              <span>Restore This Version</span>
+            </button>
+          </div>
+
+          <div class="preview-content">
+            <pre><code>{{ s.content }}</code></pre>
+          </div>
+        } @else {
+          <div class="empty-preview">
+            <md-icon name="history" [size]="32" />
+            <p>Select a snapshot from the timeline to preview and restore.</p>
+          </div>
+        }
+      </main>
+    </div>
+  </div>
+</div>

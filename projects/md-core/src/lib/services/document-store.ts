@@ -1,6 +1,8 @@
 import { Injectable, computed, effect, signal, PLATFORM_ID, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { MarkdownDocument, createDocument } from '../models/document.model';
+import { extractDocumentTags, setFrontmatterProperty, parseFrontmatter } from '../models/frontmatter.util';
+import { DocumentHistoryService } from './document-history.service';
 
 const STORAGE_KEY = 'md-view-documents';
 const ACTIVE_KEY = 'md-view-active-id';
@@ -10,6 +12,7 @@ const FOLDERS_KEY = 'md-view-folders';
 export class DocumentStore {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly isBrowser = isPlatformBrowser(this.platformId);
+  private readonly historyService = inject(DocumentHistoryService);
 
   /** All documents */
   private readonly _documents = signal<MarkdownDocument[]>(this.loadDocuments());
@@ -82,6 +85,21 @@ export class DocumentStore {
   readonly uncategorizedDocuments = computed(() =>
     this.sortedDocuments().filter((d) => !d.folder?.trim()),
   );
+
+  /** Derived: all unique tags across workspace with document counts */
+  readonly allTagsWithCounts = computed<{ tag: string; count: number }[]>(() => {
+    const counts = new Map<string, number>();
+    for (const d of this._documents()) {
+      if (d.isLocked) continue;
+      const tags = extractDocumentTags(d.content, d.tags);
+      for (const t of tags) {
+        counts.set(t, (counts.get(t) || 0) + 1);
+      }
+    }
+    return Array.from(counts.entries())
+      .map(([tag, count]) => ({ tag, count }))
+      .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag));
+  });
 
   constructor() {
     // Auto-persist documents to localStorage
@@ -337,9 +355,14 @@ export class DocumentStore {
     const id = this._activeId();
     if (!id) return;
     this._documents.update((docs) =>
-      docs.map((d) =>
-        d.id === id ? { ...d, content, updatedAt: Date.now() } : d,
-      ),
+      docs.map((d) => {
+        if (d.id === id) {
+          const updated = { ...d, content, updatedAt: Date.now() };
+          this.historyService.captureSnapshot(updated);
+          return updated;
+        }
+        return d;
+      }),
     );
   }
 
@@ -356,9 +379,142 @@ export class DocumentStore {
   /** Delete a document */
   delete(id: string): void {
     this._documents.update((docs) => docs.filter((d) => d.id !== id));
+    this.historyService.deleteHistory(id);
     if (this._activeId() === id) {
       this._activeId.set(this._documents()[0]?.id ?? null);
     }
+  }
+
+  /** Update YAML frontmatter property for a document */
+  updateFrontmatter(id: string, key: string, value: any): void {
+    const doc = this._documents().find((d) => d.id === id);
+    if (!doc || doc.isLocked) return;
+    const newContent = setFrontmatterProperty(doc.content, key, value);
+    this._documents.update((docs) =>
+      docs.map((d) => (d.id === id ? { ...d, content: newContent, updatedAt: Date.now() } : d)),
+    );
+  }
+
+  /** Lock a document with encrypted ciphertext */
+  lockDocument(id: string, cipherText: string): void {
+    this._documents.update((docs) =>
+      docs.map((d) =>
+        d.id === id
+          ? {
+              ...d,
+              isLocked: true,
+              encryptedData: cipherText,
+              content: '🔒 *This document is password encrypted.*',
+              updatedAt: Date.now(),
+            }
+          : d,
+      ),
+    );
+  }
+
+  /** Unlock a document with decrypted plaintext */
+  unlockDocument(id: string, plainText: string): void {
+    this._documents.update((docs) =>
+      docs.map((d) =>
+        d.id === id
+          ? {
+              ...d,
+              isLocked: false,
+              encryptedData: undefined,
+              content: plainText,
+              updatedAt: Date.now(),
+            }
+          : d,
+      ),
+    );
+  }
+
+  /**
+   * Finds documents linking to the specified document (Backlinks / Linked References).
+   */
+  getLinkedReferences(docId: string): { sourceDoc: MarkdownDocument; snippet: string }[] {
+    const target = this._documents().find((d) => d.id === docId);
+    if (!target) return [];
+
+    const targetTitle = target.title.toLowerCase();
+    const targetSlug = targetTitle.replace(/\s+/g, '-');
+    const results: { sourceDoc: MarkdownDocument; snippet: string }[] = [];
+
+    for (const doc of this._documents()) {
+      if (doc.id === docId || doc.isLocked) continue;
+
+      const content = doc.content;
+      const hasWikilink = new RegExp(`\\[\\[\\s*${this.escapeRegex(target.title)}(\\s*\\|[^\\]]+)?\\]\\]`, 'i').test(content);
+      const hasMdLink = new RegExp(`\\]\\([^)]*${this.escapeRegex(targetSlug)}[^)]*\\)`, 'i').test(content) ||
+                        new RegExp(`\\]\\([^)]*${this.escapeRegex(encodeURIComponent(target.title))}[^)]*\\)`, 'i').test(content);
+
+      if (hasWikilink || hasMdLink) {
+        const lines = content.split('\n');
+        let snippet = '';
+        for (const line of lines) {
+          if (line.toLowerCase().includes(targetTitle) || line.includes(targetSlug)) {
+            snippet = line.trim().slice(0, 140);
+            break;
+          }
+        }
+        results.push({
+          sourceDoc: doc,
+          snippet: snippet || doc.content.slice(0, 100),
+        });
+      }
+    }
+
+    return results;
+  }
+
+  /**
+   * Finds documents that mention the title of this note without an explicit link.
+   */
+  getUnlinkedMentions(docId: string): { sourceDoc: MarkdownDocument; snippet: string }[] {
+    const target = this._documents().find((d) => d.id === docId);
+    if (!target || target.title.trim().length < 3) return [];
+
+    const targetTitle = target.title.trim().toLowerCase();
+    const results: { sourceDoc: MarkdownDocument; snippet: string }[] = [];
+
+    for (const doc of this._documents()) {
+      if (doc.id === docId || doc.isLocked) continue;
+
+      const content = doc.content;
+      const hasWikilink = new RegExp(`\\[\\[\\s*${this.escapeRegex(target.title)}(\\s*\\|[^\\]]+)?\\]\\]`, 'i').test(content);
+      if (hasWikilink) continue;
+
+      const lowerContent = content.toLowerCase();
+      const idx = lowerContent.indexOf(targetTitle);
+      if (idx !== -1) {
+        const start = Math.max(0, idx - 40);
+        const end = Math.min(content.length, idx + targetTitle.length + 40);
+        const snippet = (start > 0 ? '...' : '') + content.slice(start, end).replace(/\n/g, ' ') + (end < content.length ? '...' : '');
+        results.push({ sourceDoc: doc, snippet });
+      }
+    }
+
+    return results;
+  }
+
+  /**
+   * Search documents matching query for Wikilink autocomplete popup.
+   */
+  searchWikilinkTargets(query: string): MarkdownDocument[] {
+    const q = query.trim().toLowerCase();
+    const active = this.activeDocument();
+    return this._documents().filter((d) => {
+      if (d.id === active?.id || d.isLocked) return false;
+      if (!q) return true;
+      return (
+        d.title.toLowerCase().includes(q) ||
+        (d.folder && d.folder.toLowerCase().includes(q))
+      );
+    }).slice(0, 8);
+  }
+
+  private escapeRegex(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 
   /** Toggle a document's favorite status */

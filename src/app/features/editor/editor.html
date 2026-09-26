@@ -16,6 +16,9 @@
     (toggleSidebar)="toggleSidebar()"
     (openTemplates)="toggleTemplates()"
     (openAbout)="toggleAbout()"
+    (openGraph)="toggleGraph()"
+    (openCommandPalette)="toggleCommandPalette()"
+    (viewModeChange)="onFolderViewModeChange($event)"
   />
 
   <!-- Main Area -->
@@ -131,6 +134,49 @@
       </div>
 
       <div class="top-bar-right">
+        <!-- Universal Command Palette trigger -->
+        <button
+          class="icon-btn action-tool-btn"
+          [class.active]="isCommandPaletteOpen()"
+          (click)="toggleCommandPalette()"
+          title="Command Palette (Ctrl+K)"
+        >
+          <md-icon name="command" [size]="16" />
+        </button>
+
+        <!-- Interactive Knowledge Graph trigger -->
+        <button
+          class="icon-btn action-tool-btn"
+          [class.active]="isGraphOpen()"
+          (click)="toggleGraph()"
+          title="Knowledge Graph (Ctrl+G)"
+        >
+          <md-icon name="graph" [size]="16" />
+        </button>
+
+        <!-- Document Revision History trigger -->
+        <button
+          class="icon-btn action-tool-btn"
+          [class.active]="isHistoryOpen()"
+          (click)="toggleHistory()"
+          title="Document History & Snapshots (Ctrl+H)"
+        >
+          <md-icon name="history" [size]="16" />
+        </button>
+
+        <!-- Vault Encrypt / Lock trigger -->
+        @if (store.activeDocument(); as activeDoc) {
+          <button
+            class="icon-btn action-tool-btn"
+            [class.active]="isEncryptModalOpen()"
+            [class.locked-active]="activeDoc.isLocked"
+            (click)="toggleEncryptModal()"
+            [title]="activeDoc.isLocked ? 'Document Locked (AES-256) - Click to Unlock' : 'Lock / Encrypt Document (Ctrl+L)'"
+          >
+            <md-icon [name]="activeDoc.isLocked ? 'lock' : 'unlock'" [size]="16" />
+          </button>
+        }
+
         <!-- Find & Replace trigger -->
         <button
           class="icon-btn action-tool-btn"
@@ -303,51 +349,91 @@
         />
       }
 
-      <!-- Editor Content Area -->
+      <!-- Wikilink Autocomplete Popup -->
+      @if (wikilinkState().active) {
+        <app-wikilink-popup
+          [query]="wikilinkState().query"
+          [position]="wikilinkState().position"
+          (selectDoc)="onWikilinkSelect($event)"
+          (close)="wikilinkState.set({ active: false, query: '', position: { top: 0, left: 0 } })"
+        />
+      }
+
+      <!-- Editor Content Area (Supports Document, Kanban, or Table View) -->
       <div class="editor-content">
-        @if (store.activeDocument(); as doc) {
-          @switch (viewMode()) {
-            @case ('edit') {
-              <app-markdown-input
-                [content]="doc.content"
-                [toolbarAction]="toolbarAction()"
-                (contentChange)="onContentChange($event)"
-                (slashTrigger)="onSlashTrigger($event)"
-              />
-            }
-            @case ('preview') {
-              <md-markdown-preview
-                [content]="doc.content"
-                (contentChange)="onContentChange($event)"
-                (documentNavigate)="onDocumentNavigate($event)"
-              />
-            }
-            @case ('split') {
-              <md-split-view>
-                <app-markdown-input
-                  left
-                  [content]="doc.content"
-                  [toolbarAction]="toolbarAction()"
-                  (contentChange)="onContentChange($event)"
-                  (slashTrigger)="onSlashTrigger($event)"
-                />
-                <md-markdown-preview
-                  right
-                  [content]="doc.content"
-                  (contentChange)="onContentChange($event)"
-                  (documentNavigate)="onDocumentNavigate($event)"
-                />
-              </md-split-view>
-            }
-          }
+        @if (folderViewMode() === 'kanban') {
+          <app-kanban-view [folderFilter]="activeFolder()" (openDoc)="onOpenDocFromMultiView($event)" />
+        } @else if (folderViewMode() === 'table') {
+          <app-table-view [folderFilter]="activeFolder()" (openDoc)="onOpenDocFromMultiView($event)" />
         } @else {
-          <div class="empty-state">
-            <div class="empty-icon">
-              <md-icon name="document" [size]="48" />
+          @if (store.activeDocument(); as doc) {
+            @if (doc.isLocked) {
+              <!-- Locked Vault Document View -->
+              <div class="locked-doc-screen">
+                <div class="locked-doc-card">
+                  <div class="locked-icon-badge">
+                    <md-icon name="lock" [size]="48" />
+                  </div>
+                  <h2>Note Encrypted & Locked</h2>
+                  <p class="locked-desc">This note is protected with client-side AES-GCM 256-bit encryption. Enter your password to unlock and edit.</p>
+                  <button class="unlock-action-btn" (click)="toggleEncryptModal()">
+                    <md-icon name="unlock" [size]="16" />
+                    <span>Unlock Document</span>
+                  </button>
+                </div>
+              </div>
+            } @else {
+              @switch (viewMode()) {
+                @case ('edit') {
+                  <app-markdown-input
+                    [content]="doc.content"
+                    [toolbarAction]="toolbarAction()"
+                    (contentChange)="onContentChange($event)"
+                    (slashTrigger)="onSlashTrigger($event)"
+                    (wikilinkTrigger)="onWikilinkTrigger($event)"
+                  />
+                }
+                @case ('preview') {
+                  <md-markdown-preview
+                    [content]="doc.content"
+                    (contentChange)="onContentChange($event)"
+                    (documentNavigate)="onDocumentNavigate($event)"
+                  />
+                }
+                @case ('split') {
+                  <md-split-view>
+                    <app-markdown-input
+                      left
+                      [content]="doc.content"
+                      [toolbarAction]="toolbarAction()"
+                      (contentChange)="onContentChange($event)"
+                      (slashTrigger)="onSlashTrigger($event)"
+                      (wikilinkTrigger)="onWikilinkTrigger($event)"
+                    />
+                    <md-markdown-preview
+                      right
+                      [content]="doc.content"
+                      (contentChange)="onContentChange($event)"
+                      (documentNavigate)="onDocumentNavigate($event)"
+                    />
+                  </md-split-view>
+                }
+              }
+
+              <!-- Backlinks & Mentions Panel -->
+              @if (viewMode() !== 'edit') {
+                <app-backlinks-panel (navigateDoc)="onSelectDocFromGraph($event)" />
+              }
+            }
+          } @else {
+            <div class="empty-state">
+              <div class="empty-icon">
+                <md-icon name="document" [size]="48" />
+              </div>
+              <h2>No document selected</h2>
+              <p>Create a new document or import markdown files to get started.</p>
             </div>
-            <h2>No document selected</h2>
-            <p>Create a new document or import markdown files to get started.</p>
-          </div>
+          }
         }
       </div>
 
@@ -437,5 +523,47 @@
         <span>Drop markdown files here</span>
       </div>
     </div>
+  }
+
+  <!-- Universal Command Palette Modal -->
+  @if (isCommandPaletteOpen()) {
+    <app-command-palette
+      (close)="isCommandPaletteOpen.set(false)"
+      (openGraph)="isCommandPaletteOpen.set(false); isGraphOpen.set(true)"
+      (openHistory)="isCommandPaletteOpen.set(false); isHistoryOpen.set(true)"
+      (openLockModal)="isCommandPaletteOpen.set(false); isEncryptModalOpen.set(true)"
+      (openTemplates)="isCommandPaletteOpen.set(false); isTemplatesOpen.set(true)"
+      (toggleZen)="toggleZenMode()"
+      (toggleFind)="toggleFind()"
+      (toggleToc)="toggleToc()"
+      (setViewMode)="setViewMode($event)"
+      (setFolderViewMode)="onFolderViewModeChange($event)"
+      (exportHtml)="exportHtml()"
+      (exportZip)="exportAllZip()"
+    />
+  }
+
+  <!-- Interactive Knowledge Graph Modal -->
+  @if (isGraphOpen()) {
+    <app-knowledge-graph
+      (close)="isGraphOpen.set(false)"
+      (selectDoc)="onSelectDocFromGraph($event)"
+    />
+  }
+
+  <!-- Document Revision History Modal -->
+  @if (isHistoryOpen()) {
+    <app-history-modal
+      (close)="isHistoryOpen.set(false)"
+      (restored)="onRestoreHistory($event)"
+    />
+  }
+
+  <!-- Vault Encrypt / Lock Modal -->
+  @if (isEncryptModalOpen()) {
+    <app-encrypt-modal
+      (close)="isEncryptModalOpen.set(false)"
+      (notify)="notifyUser($event)"
+    />
   }
 </div>

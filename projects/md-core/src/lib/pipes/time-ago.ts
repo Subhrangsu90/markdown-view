@@ -29,3 +29,5 @@ export class TimeAgo implements PipeTransform {
     });
   }
 }
+
+export { TimeAgo as TimeAgoPipe };

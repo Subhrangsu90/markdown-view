@@ -1,0 +1,79 @@
+<div class="backlinks-container" [class.collapsed]="isCollapsed()">
+  <!-- Header Toggle -->
+  <div class="backlinks-header" (click)="isCollapsed.update(c => !c)">
+    <div class="header-left">
+      <md-icon name="link-2" [size]="14" />
+      <span class="header-title">BACKLINKS & MENTIONS</span>
+      <span class="count-badge">{{ totalCount() }}</span>
+    </div>
+    <div class="header-right">
+      <button class="toggle-btn" (click)="$event.stopPropagation(); isCollapsed.update(c => !c)">
+        <md-icon [name]="isCollapsed() ? 'chevron-up' : 'chevron-down'" [size]="12" />
+      </button>
+      <button class="close-btn" (click)="$event.stopPropagation(); close.emit()" title="Close Backlinks">
+        <md-icon name="close" [size]="14" />
+      </button>
+    </div>
+  </div>
+
+  @if (!isCollapsed()) {
+    <div class="backlinks-content">
+      <!-- Section 1: Linked References -->
+      <div class="references-section">
+        <div class="section-label">
+          <span>LINKED REFERENCES</span>
+          <span class="section-count">({{ linkedReferences().length }})</span>
+        </div>
+
+        @if (linkedReferences().length === 0) {
+          <div class="empty-notice">No other notes link to this document yet. Type [[{{ activeDoc()?.title }}]] in any note to link it!</div>
+        } @else {
+          <div class="references-list">
+            @for (ref of linkedReferences(); track ref.sourceDoc.id) {
+              <div class="reference-item" (click)="openDocument(ref.sourceDoc.id)">
+                <div class="ref-title-row">
+                  <md-icon [name]="ref.sourceDoc.icon || 'document'" [size]="13" />
+                  <span class="ref-title">{{ ref.sourceDoc.title }}</span>
+                  @if (ref.sourceDoc.folder) {
+                    <span class="ref-folder">{{ ref.sourceDoc.folder }}</span>
+                  }
+                </div>
+                <div class="ref-snippet">
+                  {{ ref.snippet }}
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Section 2: Unlinked Mentions -->
+      @if (unlinkedMentions().length > 0) {
+        <div class="references-section">
+          <div class="section-label">
+            <span>UNLINKED MENTIONS</span>
+            <span class="section-count">({{ unlinkedMentions().length }})</span>
+          </div>
+
+          <div class="references-list">
+            @for (mention of unlinkedMentions(); track mention.sourceDoc.id) {
+              <div class="reference-item mention-item" (click)="openDocument(mention.sourceDoc.id)">
+                <div class="ref-title-row">
+                  <md-icon [name]="mention.sourceDoc.icon || 'document'" [size]="13" />
+                  <span class="ref-title">{{ mention.sourceDoc.title }}</span>
+                  <button class="link-btn" (click)="$event.stopPropagation(); linkMention(mention.sourceDoc)" title="Turn mention into Wikilink">
+                    <md-icon name="link-2" [size]="11" />
+                    <span>Link</span>
+                  </button>
+                </div>
+                <div class="ref-snippet">
+                  {{ mention.snippet }}
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

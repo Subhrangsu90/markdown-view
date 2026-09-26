@@ -1,0 +1,76 @@
+<div class="table-container">
+  <div class="table-scroll-wrapper">
+    <table class="database-table">
+      <thead>
+        <tr>
+          <th class="col-title">Title</th>
+          <th class="col-status">Status</th>
+          <th class="col-folder">Folder</th>
+          <th class="col-tags">Tags</th>
+          <th class="col-words">Words</th>
+          <th class="col-date">Updated</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (doc of targetDocs(); track doc.id) {
+          <tr class="table-row" (click)="selectDoc(doc.id)">
+            <td class="cell-title">
+              <div class="title-cell-wrap">
+                <md-icon [name]="doc.icon || 'document'" [size]="15" />
+                <span class="title-text">{{ doc.title }}</span>
+                @if (doc.isLocked) {
+                  <span class="lock-indicator" title="Encrypted note">🔒</span>
+                }
+              </div>
+            </td>
+            <td class="cell-status" (click)="$event.stopPropagation()">
+              <select
+                class="status-select"
+                [value]="getDocStatus(doc)"
+                (change)="changeStatus(doc, $event)"
+              >
+                <option value="Backlog">Backlog</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Review">Review</option>
+                <option value="Done">Done</option>
+                <option value="Draft">Draft</option>
+              </select>
+            </td>
+            <td class="cell-folder">
+              @if (doc.folder) {
+                <span class="folder-badge">{{ doc.folder }}</span>
+              } @else {
+                <span class="empty-cell">—</span>
+              }
+            </td>
+            <td class="cell-tags">
+              @if (getDocTags(doc); as tags) {
+                @if (tags.length > 0) {
+                  <div class="tags-wrap">
+                    @for (t of tags; track t) {
+                      <span class="tag-pill">#{{ t }}</span>
+                    }
+                  </div>
+                } @else {
+                  <span class="empty-cell">—</span>
+                }
+              }
+            </td>
+            <td class="cell-words">{{ getDocWordCount(doc) }}</td>
+            <td class="cell-date">{{ doc.updatedAt | timeAgo }}</td>
+          </tr>
+        }
+
+        <!-- Add New Row -->
+        <tr class="add-row" (click)="createNewRow()">
+          <td colspan="6">
+            <div class="add-row-content">
+              <md-icon name="plus" [size]="14" />
+              <span>New document row</span>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -5,6 +5,7 @@
 // Models
 export * from './lib/models/document.model';
 export * from './lib/models/templates';
+export * from './lib/models/frontmatter.util';
 
 // Services
 export * from './lib/services/document-store';
@@ -13,6 +14,8 @@ export * from './lib/services/file-export';
 export * from './lib/services/local-directory.service';
 export * from './lib/services/markdown.config';
 export * from './lib/services/theme.service';
+export * from './lib/services/encryption.service';
+export * from './lib/services/document-history.service';
 
 // Components
 export * from './lib/components/toolbar/toolbar';

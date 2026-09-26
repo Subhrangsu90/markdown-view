@@ -33,8 +33,17 @@ import { FindReplace } from './components/find-replace/find-replace';
 import { ShortcutsModal } from './components/shortcuts-modal/shortcuts-modal';
 import { TemplatesModal } from './components/templates-modal/templates-modal';
 import { AboutModal } from './components/about-modal/about-modal';
+import { CommandPalette } from './components/command-palette/command-palette';
+import { KnowledgeGraph } from './components/knowledge-graph/knowledge-graph';
+import { HistoryModal } from './components/history-modal/history-modal';
+import { EncryptModal } from './components/encrypt-modal/encrypt-modal';
+import { WikilinkPopup } from './components/wikilink-popup/wikilink-popup';
+import { KanbanView } from './components/kanban-view/kanban-view';
+import { TableView } from './components/table-view/table-view';
+import { BacklinksPanel } from './components/backlinks-panel/backlinks-panel';
 
 export type ViewMode = 'edit' | 'preview' | 'split';
+export type FolderViewMode = 'editor' | 'kanban' | 'table';
 
 @Component({
   selector: 'app-editor',
@@ -53,6 +62,14 @@ export type ViewMode = 'edit' | 'preview' | 'split';
     ShortcutsModal,
     TemplatesModal,
     AboutModal,
+    CommandPalette,
+    KnowledgeGraph,
+    HistoryModal,
+    EncryptModal,
+    WikilinkPopup,
+    KanbanView,
+    TableView,
+    BacklinksPanel,
     MdIcon,
   ],
   templateUrl: './editor.html',
@@ -83,11 +100,26 @@ export class Editor {
   protected readonly isTemplatesOpen = signal(false);
   protected readonly isAboutOpen = signal(false);
   protected readonly isZenMode = signal(false);
+  protected readonly isCommandPaletteOpen = signal(false);
+  protected readonly isGraphOpen = signal(false);
+  protected readonly isHistoryOpen = signal(false);
+  protected readonly isEncryptModalOpen = signal(false);
+  protected readonly isBacklinksOpen = signal(true);
+  protected readonly folderViewMode = signal<FolderViewMode>('editor');
+
   protected readonly slashState = signal<SlashTriggerEvent>({
     active: false,
     query: '',
     position: { top: 0, left: 0 },
   });
+
+  protected readonly wikilinkState = signal<SlashTriggerEvent>({
+    active: false,
+    query: '',
+    position: { top: 0, left: 0 },
+  });
+
+  protected readonly activeFolder = computed(() => this.store.activeDocument()?.folder ?? null);
 
   // Find & Replace match tracking
   protected readonly findMatches = signal<number[]>([]);
@@ -158,6 +190,56 @@ export class Editor {
     this.isZenMode.update((v) => !v);
   }
 
+  protected toggleCommandPalette(): void {
+    this.isCommandPaletteOpen.update((v) => !v);
+  }
+
+  protected toggleGraph(): void {
+    this.isGraphOpen.update((v) => !v);
+  }
+
+  protected toggleHistory(): void {
+    this.isHistoryOpen.update((v) => !v);
+  }
+
+  protected toggleEncryptModal(): void {
+    this.isEncryptModalOpen.update((v) => !v);
+  }
+
+  protected toggleBacklinks(): void {
+    this.isBacklinksOpen.update((v) => !v);
+  }
+
+  protected onFolderViewModeChange(mode: FolderViewMode): void {
+    this.folderViewMode.set(mode);
+  }
+
+  protected onOpenDocFromMultiView(docId: string): void {
+    this.store.select(docId);
+    this.folderViewMode.set('editor');
+  }
+
+  protected onSelectDocFromGraph(docId: string): void {
+    this.store.select(docId);
+    this.isGraphOpen.set(false);
+    this.folderViewMode.set('editor');
+  }
+
+  protected onRestoreHistory(content: string): void {
+    this.store.updateContent(content);
+    this.isHistoryOpen.set(false);
+    this.notifyUser('Document restored from history revision.');
+  }
+
+  protected onWikilinkTrigger(event: SlashTriggerEvent): void {
+    this.wikilinkState.set(event);
+  }
+
+  protected onWikilinkSelect(targetTitle: string): void {
+    this.inputComponent()?.insertWikilink(targetTitle);
+    this.wikilinkState.set({ active: false, query: '', position: { top: 0, left: 0 } });
+  }
+
   protected onApplyTemplate(template: DocumentTemplate): void {
     const doc = this.store.create(template.title, template.content, template.category);
     this.store.updateIcon(doc.id, template.icon);
@@ -195,6 +277,9 @@ export class Editor {
 
   /** Inter-document link clicked in preview */
   protected onDocumentNavigate(event: { docId: string; title: string }): void {
+    if (event.docId) {
+      this.store.select(event.docId);
+    }
     this.notifyUser(`Navigated to "${event.title}"`);
   }
 
@@ -499,7 +584,7 @@ export class Editor {
     this.isFolderMenuOpen.set(false);
   }
 
-  private notifyUser(message: string): void {
+  protected notifyUser(message: string): void {
     this.copySuccessMessage.set(message);
     setTimeout(() => {
       this.copySuccessMessage.set(null);
@@ -512,8 +597,14 @@ export class Editor {
     );
   }
 
-  // Drag & drop handling
+  // Drag & drop handling (for local markdown file importing)
   protected onDragOver(event: DragEvent): void {
+    // Only activate file drop overlay if actual OS files are being dragged
+    const types = event.dataTransfer?.types;
+    const isFileDrag = types ? Array.from(types).includes('Files') : false;
+    if (!isFileDrag) {
+      return;
+    }
     event.preventDefault();
     event.stopPropagation();
     this.isDragOver.set(true);
@@ -522,14 +613,25 @@ export class Editor {
   protected onDragLeave(event: DragEvent): void {
     event.preventDefault();
     event.stopPropagation();
+    // Only dismiss if cursor is truly leaving the editor shell container
+    const currentTarget = event.currentTarget as HTMLElement;
+    const relatedTarget = event.relatedTarget as Node | null;
+    if (relatedTarget && currentTarget?.contains(relatedTarget)) {
+      return;
+    }
     this.isDragOver.set(false);
   }
 
   protected async onDrop(event: DragEvent): Promise<void> {
+    const types = event.dataTransfer?.types;
+    const isFileDrag = types ? Array.from(types).includes('Files') : false;
+    if (!isFileDrag) {
+      return;
+    }
     event.preventDefault();
     event.stopPropagation();
     this.isDragOver.set(false);
-    if (event.dataTransfer) {
+    if (event.dataTransfer && event.dataTransfer.files.length > 0) {
       await this.fileImport.processDroppedItems(event.dataTransfer);
     }
   }
@@ -545,8 +647,31 @@ export class Editor {
       if (handled) return;
     }
 
+    // Close wikilink popup on Escape
+    if (this.wikilinkState().active && event.key === 'Escape') {
+      event.preventDefault();
+      this.wikilinkState.set({ active: false, query: '', position: { top: 0, left: 0 } });
+      return;
+    }
+
     if (event.ctrlKey || event.metaKey) {
       switch (event.key.toLowerCase()) {
+        case 'k':
+          event.preventDefault();
+          this.toggleCommandPalette();
+          break;
+        case 'g':
+          event.preventDefault();
+          this.toggleGraph();
+          break;
+        case 'h':
+          event.preventDefault();
+          this.toggleHistory();
+          break;
+        case 'l':
+          event.preventDefault();
+          this.toggleEncryptModal();
+          break;
         case 'e':
           event.preventDefault();
           this.setViewMode('edit');
@@ -582,8 +707,18 @@ export class Editor {
           this.toggleTemplates();
           break;
       }
-    } else if (event.key === 'Escape' && this.isZenMode()) {
-      this.isZenMode.set(false);
+    } else if (event.key === 'Escape') {
+      if (this.isCommandPaletteOpen()) {
+        this.isCommandPaletteOpen.set(false);
+      } else if (this.isGraphOpen()) {
+        this.isGraphOpen.set(false);
+      } else if (this.isHistoryOpen()) {
+        this.isHistoryOpen.set(false);
+      } else if (this.isEncryptModalOpen()) {
+        this.isEncryptModalOpen.set(false);
+      } else if (this.isZenMode()) {
+        this.isZenMode.set(false);
+      }
     } else if (event.key === 'F11') {
       event.preventDefault();
       this.toggleZenMode();

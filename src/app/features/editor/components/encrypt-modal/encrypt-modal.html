@@ -1,0 +1,72 @@
+<div class="lock-backdrop" (click)="close.emit()">
+  <div class="lock-modal" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="lock-header">
+      <div class="lock-icon-wrap" [class.locked]="isLocked()">
+        <md-icon [name]="isLocked() ? 'lock' : 'unlock'" [size]="20" />
+      </div>
+      <h3>{{ isLocked() ? 'Unlock Document' : 'Encrypt & Lock Document' }}</h3>
+      <p class="lock-subtitle">
+        {{ isLocked()
+          ? 'Enter your passphrase to decrypt and edit "' + activeDoc()?.title + '"'
+          : 'Protect "' + activeDoc()?.title + '" using local AES-GCM 256-bit encryption'
+        }}
+      </p>
+    </div>
+
+    <!-- Form -->
+    <form (ngSubmit)="submit()" class="lock-form">
+      <div class="form-group">
+        <label>Passphrase</label>
+        <input
+          type="password"
+          placeholder="Enter secret passphrase..."
+          [ngModel]="password()"
+          (ngModelChange)="password.set($event)"
+          name="password"
+          autofocus
+        />
+      </div>
+
+      @if (!isLocked()) {
+        <div class="form-group">
+          <label>Confirm Passphrase</label>
+          <input
+            type="password"
+            placeholder="Re-enter passphrase..."
+            [ngModel]="confirmPassword()"
+            (ngModelChange)="confirmPassword.set($event)"
+            name="confirmPassword"
+          />
+        </div>
+      }
+
+      @if (errorMessage(); as err) {
+        <div class="error-banner">
+          <md-icon name="warning" [size]="14" />
+          <span>{{ err }}</span>
+        </div>
+      }
+
+      @if (!isLocked()) {
+        <div class="security-note">
+          <md-icon name="info" [size]="13" />
+          <small>
+            Your passphrase is never sent over any network. If you lose this password, your encrypted data cannot be recovered.
+          </small>
+        </div>
+      }
+
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" (click)="close.emit()">Cancel</button>
+        <button type="submit" class="btn-primary" [disabled]="isProcessing()">
+          @if (isProcessing()) {
+            <span>Processing...</span>
+          } @else {
+            <span>{{ isLocked() ? 'Unlock Document' : 'Lock with AES-256' }}</span>
+          }
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,43 @@
+<div
+  class="wikilink-popup-panel"
+  [style.top.px]="position().top"
+  [style.left.px]="position().left"
+>
+  <div class="wikilink-header">
+    <md-icon name="link-2" [size]="12" />
+    <span>LINK TO NOTE ({{ filteredDocs().length }} results)</span>
+  </div>
+
+  <div class="wikilink-list">
+    @for (doc of filteredDocs(); track doc.id; let idx = $index) {
+      <button
+        class="wikilink-item"
+        [class.selected]="selectedIndex() === idx"
+        (click)="chooseDoc(doc.title)"
+        (mouseenter)="selectedIndex.set(idx)"
+      >
+        <md-icon [name]="doc.icon || 'document'" [size]="14" />
+        <span class="wikilink-title">{{ doc.title }}</span>
+        @if (doc.folder) {
+          <span class="wikilink-folder">{{ doc.folder }}</span>
+        }
+      </button>
+    }
+
+    @if (query().trim()) {
+      <button
+        class="wikilink-item create-new"
+        [class.selected]="selectedIndex() === filteredDocs().length"
+        (click)="chooseDoc(query().trim())"
+        (mouseenter)="selectedIndex.set(filteredDocs().length)"
+      >
+        <md-icon name="plus" [size]="14" />
+        <span class="wikilink-title">Create new note: <strong>"{{ query().trim() }}"</strong></span>
+      </button>
+    }
+
+    @if (filteredDocs().length === 0 && !query().trim()) {
+      <div class="empty-hint">Type a title to search notes...</div>
+    }
+  </div>
+</div>

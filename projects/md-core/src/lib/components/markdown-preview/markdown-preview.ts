@@ -8,10 +8,12 @@ import {
   inject,
   HostListener,
   effect,
+  computed,
 } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
+import { isPlatformBrowser, KeyValuePipe } from '@angular/common';
 import { MarkdownComponent } from 'ngx-markdown';
 import { DocumentStore } from '../../services/document-store';
+import { parseFrontmatter } from '../../models/frontmatter.util';
 
 const ALERT_SVGS: Record<string, string> = {
   note: '<svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1.5a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"/></svg>',
@@ -61,7 +63,7 @@ const ALERT_TYPE_MAP: Record<string, string> = {
 @Component({
   selector: 'md-markdown-preview',
   standalone: true,
-  imports: [MarkdownComponent],
+  imports: [MarkdownComponent, KeyValuePipe],
   templateUrl: './markdown-preview.html',
   styleUrl: './markdown-preview.css',
 })
@@ -76,6 +78,29 @@ export class MarkdownPreview {
   readonly scrollEvent = output<Event>();
   readonly contentChange = output<string>();
   readonly documentNavigate = output<{ docId: string; title: string }>();
+
+  protected readonly isArray = Array.isArray;
+
+  /** Preprocesses content for frontmatter separation and [[Wikilinks]] */
+  protected readonly parsedContent = computed(() => {
+    const raw = this.content();
+    const { data, body } = parseFrontmatter(raw);
+
+    // Transform [[Title]] and [[Title|Alias]] into [Alias](wikilink:Title)
+    const wikilinkTransformed = body.replace(
+      /\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g,
+      (_, title, alias) => {
+        const text = (alias || title).trim();
+        const linkTarget = title.trim();
+        return `[${text}](wikilink:${encodeURIComponent(linkTarget)})`;
+      },
+    );
+
+    return {
+      frontmatter: Object.keys(data).length > 0 ? data : null,
+      body: wikilinkTransformed,
+    };
+  });
 
   constructor() {
     effect(() => {
@@ -124,8 +149,85 @@ export class MarkdownPreview {
     this.enhanceCheckboxes();
     this.enhanceLinksAndHeadings();
     this.enhanceBadges();
+    this.enhanceTags();
     await this.enhanceMermaid();
     await this.enhanceMath();
+  }
+
+  /**
+   * Highlights inline #tags with interactive pills.
+   */
+  private enhanceTags(): void {
+    const container = this.previewContainer()?.nativeElement;
+    if (!container) return;
+
+    const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+    const nodesToReplace: { node: Text; parent: Node; matches: RegExpExecArray[] }[] = [];
+    const tagRegex = /(?:^|\s)#([a-zA-Z0-9_\-]+)(?=\s|[.,;:!?]|$)/g;
+
+    let currentNode = walker.nextNode();
+    while (currentNode) {
+      const parent = currentNode.parentElement;
+      // Do not replace inside code blocks, math, links, or already processed tags
+      if (
+        parent &&
+        !parent.closest('pre') &&
+        !parent.closest('code') &&
+        !parent.closest('.katex') &&
+        !parent.closest('a') &&
+        !parent.closest('.tag-pill')
+      ) {
+        const text = currentNode.nodeValue || '';
+        let match: RegExpExecArray | null;
+        const matches: RegExpExecArray[] = [];
+        while ((match = tagRegex.exec(text)) !== null) {
+          if (!/^\d+$/.test(match[1])) {
+            matches.push(match);
+          }
+        }
+        if (matches.length > 0) {
+          nodesToReplace.push({ node: currentNode as Text, parent, matches });
+        }
+      }
+      currentNode = walker.nextNode();
+    }
+
+    for (const { node, parent } of nodesToReplace) {
+      const text = node.nodeValue || '';
+      const fragment = document.createDocumentFragment();
+      let lastIndex = 0;
+      const re = /(^|\s)#([a-zA-Z0-9_\-]+)(?=\s|[.,;:!?]|$)/g;
+      let m: RegExpExecArray | null;
+
+      while ((m = re.exec(text)) !== null) {
+        const full = m[0];
+        const prefix = m[1];
+        const tag = m[2];
+        const matchStart = m.index;
+
+        if (matchStart > lastIndex) {
+          fragment.appendChild(document.createTextNode(text.substring(lastIndex, matchStart)));
+        }
+
+        if (prefix) {
+          fragment.appendChild(document.createTextNode(prefix));
+        }
+
+        const pill = document.createElement('span');
+        pill.className = 'tag-pill';
+        pill.textContent = `#${tag}`;
+        pill.setAttribute('data-tag', tag.toLowerCase());
+        fragment.appendChild(pill);
+
+        lastIndex = matchStart + full.length;
+      }
+
+      if (lastIndex < text.length) {
+        fragment.appendChild(document.createTextNode(text.substring(lastIndex)));
+      }
+
+      parent.replaceChild(fragment, node);
+    }
   }
 
   /**
@@ -156,6 +258,33 @@ export class MarkdownPreview {
     links.forEach((link) => {
       const rawHref = link.getAttribute('href') || '';
       if (!rawHref) return;
+
+      // Handle [[Wikilinks]]
+      if (rawHref.startsWith('wikilink:')) {
+        link.classList.add('wikilink');
+        const targetTitle = decodeURIComponent(rawHref.replace('wikilink:', ''));
+        const matched = this.store.findByPathOrTitle(targetTitle);
+
+        if (!matched) {
+          link.classList.add('wikilink-new');
+          link.setAttribute('title', `Click to create new page: "${targetTitle}"`);
+        } else {
+          link.setAttribute('title', `Navigate to "${matched.title}"`);
+        }
+
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (matched) {
+            this.store.select(matched.id);
+            this.documentNavigate.emit({ docId: matched.id, title: matched.title });
+          } else {
+            const newDoc = this.store.create(targetTitle, `# ${targetTitle}\n\n`);
+            this.documentNavigate.emit({ docId: newDoc.id, title: newDoc.title });
+          }
+        });
+        return;
+      }
 
       // External links
       if (

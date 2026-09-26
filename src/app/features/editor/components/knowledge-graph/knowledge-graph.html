@@ -1,0 +1,73 @@
+<div class="graph-modal-backdrop" (click)="close.emit()">
+  <div class="graph-modal-container" (click)="$event.stopPropagation()">
+    <!-- Top Graph Toolbar -->
+    <header class="graph-topbar">
+      <div class="topbar-left">
+        <div class="graph-title-badge">
+          <md-icon name="graph" [size]="18" />
+          <h2>Interactive Knowledge Graph</h2>
+        </div>
+        <div class="graph-metrics">
+          <span>{{ totalNodes() }} notes</span>
+          <span>•</span>
+          <span>{{ totalLinks() }} links</span>
+        </div>
+      </div>
+
+      <div class="topbar-center">
+        <div class="graph-search-box">
+          <md-icon name="search" [size]="14" />
+          <input
+            type="text"
+            placeholder="Search notes in graph..."
+            [ngModel]="searchQuery()"
+            (ngModelChange)="searchQuery.set($event)"
+          />
+        </div>
+      </div>
+
+      <div class="topbar-right">
+        <button class="graph-tool-btn" (click)="resetView()" title="Reset Zoom & Pan">
+          <span>Reset View</span>
+        </button>
+        <button class="graph-close-btn" (click)="close.emit()" title="Close Graph (Esc)">
+          <md-icon name="close" [size]="18" />
+        </button>
+      </div>
+    </header>
+
+    <!-- Canvas Area -->
+    <div class="graph-canvas-wrapper">
+      <canvas
+        #graphCanvas
+        (mousedown)="onMouseDown($event)"
+        (mousemove)="onMouseMove($event)"
+        (mouseup)="onMouseUp($event)"
+        (wheel)="onWheel($event)"
+        (click)="onCanvasClick($event)"
+      ></canvas>
+
+      <!-- Hover Tooltip -->
+      @if (hoveredNode(); as node) {
+        <div class="node-hover-tooltip" [style.left.px]="20" [style.bottom.px]="20">
+          <div class="tooltip-header">
+            <span class="node-dot" [style.background-color]="node.color"></span>
+            <strong>{{ node.title }}</strong>
+          </div>
+          <div class="tooltip-body">
+            @if (node.folder) {
+              <div>Folder: <span>{{ node.folder }}</span></div>
+            }
+            <div>Connections: <span>{{ node.connections }}</span></div>
+          </div>
+          <div class="tooltip-hint">Click note to navigate</div>
+        </div>
+      }
+
+      <!-- Bottom Hint -->
+      <div class="graph-bottom-hint">
+        <span>Scroll to zoom</span> • <span>Drag to pan & reposition</span> • <span>Click node to open</span>
+      </div>
+    </div>
+  </div>
+</div>

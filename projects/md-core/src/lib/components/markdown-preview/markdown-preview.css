@@ -787,3 +787,103 @@
   font-size: 1.08em;
   text-rendering: auto;
 }
+
+/* ===== Notion-Style YAML Frontmatter Card ===== */
+.frontmatter-card {
+  margin-bottom: 2rem;
+  background: var(--surface-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 18px;
+  box-shadow: var(--shadow-sm);
+}
+
+.frontmatter-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.frontmatter-badge {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+}
+
+.frontmatter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px 16px;
+}
+
+.frontmatter-row {
+  display: flex;
+  align-items: center;
+  font-size: 13.5px;
+  gap: 8px;
+}
+
+.frontmatter-key {
+  color: var(--text-secondary);
+  font-weight: 550;
+  min-width: 70px;
+}
+
+.frontmatter-value {
+  color: var(--text-primary);
+  background: var(--surface-hover);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ===== [[Wikilinks]] ===== */
+:host ::ng-deep a.wikilink {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 550;
+  border-bottom: 1.5px dashed var(--primary);
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: rgba(99, 102, 241, 0.08);
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+:host ::ng-deep a.wikilink:hover {
+  background: rgba(99, 102, 241, 0.18);
+  border-bottom-style: solid;
+}
+
+:host ::ng-deep a.wikilink-new {
+  color: var(--text-secondary);
+  border-bottom-color: var(--text-tertiary);
+  opacity: 0.85;
+}
+
+/* ===== #tags ===== */
+:host ::ng-deep .tag-pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--primary);
+  background: var(--surface-hover);
+  border: 1px solid var(--border);
+  padding: 1px 7px;
+  border-radius: 12px;
+  margin: 0 2px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+:host ::ng-deep .tag-pill:hover {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
+}

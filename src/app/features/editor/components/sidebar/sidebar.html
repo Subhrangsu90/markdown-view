@@ -36,6 +36,24 @@
     <div class="action-toolbar">
       <button
         class="action-btn secondary"
+        (click)="openCommandPalette.emit()"
+        title="Command Palette (Ctrl+K)"
+      >
+        <md-icon name="command" [size]="13" />
+        <span>Ctrl+K</span>
+      </button>
+
+      <button
+        class="action-btn secondary"
+        (click)="openGraph.emit()"
+        title="Interactive Knowledge Graph (Ctrl+G)"
+      >
+        <md-icon name="graph" [size]="13" />
+        <span>Graph</span>
+      </button>
+
+      <button
+        class="action-btn secondary"
         (click)="openTemplates.emit()"
         title="Explore starter templates"
       >
@@ -192,8 +210,63 @@
     </div>
   }
 
+  <!-- Multi-View Mode Switcher -->
+  <div class="sidebar-views-nav">
+    <button class="view-nav-btn" (click)="viewModeChange.emit('editor')" title="Document Editor View">
+      <md-icon name="edit" [size]="12" />
+      <span>Editor</span>
+    </button>
+    <button class="view-nav-btn" (click)="viewModeChange.emit('kanban')" title="Kanban Board View">
+      <md-icon name="kanban" [size]="12" />
+      <span>Kanban</span>
+    </button>
+    <button class="view-nav-btn" (click)="viewModeChange.emit('table')" title="Database Table View">
+      <md-icon name="table-view" [size]="12" />
+      <span>Table</span>
+    </button>
+  </div>
+
+  <!-- Active Tag Filter Card -->
+  @if (activeTag(); as tag) {
+    <div class="active-tag-filter-card">
+      <div class="tag-filter-badge">
+        <md-icon name="tag" [size]="12" />
+        <span>#{{ tag }}</span>
+      </div>
+      <button class="clear-tag-btn" (click)="clearTag()" title="Clear tag filter">
+        <md-icon name="close" [size]="12" />
+      </button>
+    </div>
+  }
+
   <!-- Document List Container -->
   <div class="sidebar-list">
+    <!-- Tags Explorer Section -->
+    @if (store.allTagsWithCounts().length > 0) {
+      <div class="section-divider clickable" (click)="isTagsCollapsed.update(c => !c)">
+        <md-icon name="tag" [size]="12" />
+        <span>Tags ({{ store.allTagsWithCounts().length }})</span>
+        <md-icon [name]="isTagsCollapsed() ? 'chevron-right' : 'chevron-down'" [size]="10" style="margin-left: auto;" />
+      </div>
+
+      @if (!isTagsCollapsed()) {
+        <div class="sidebar-tags-container">
+          @for (item of store.allTagsWithCounts(); track item.tag) {
+            <button
+              class="sidebar-tag-chip"
+              [class.active]="activeTag() === item.tag"
+              (click)="toggleTag(item.tag)"
+              [title]="'Filter notes tagged #' + item.tag"
+            >
+              <span class="tag-hash">#</span>
+              <span class="tag-name">{{ item.tag }}</span>
+              <span class="tag-count">{{ item.count }}</span>
+            </button>
+          }
+        </div>
+      }
+    }
+
     <!-- Pinned / Favorites Section -->
     @if (filteredFavoriteDocuments().length > 0) {
       <div class="section-divider">

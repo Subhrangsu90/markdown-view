@@ -13,6 +13,7 @@ import {
   MdIcon,
   DOCUMENT_ICON_PALETTE,
   resolveIconName,
+  extractDocumentTags,
 } from 'md-core';
 
 export interface FolderGroup {
@@ -45,8 +46,13 @@ export class Sidebar {
   readonly toggleSidebar = output<void>();
   readonly openTemplates = output<void>();
   readonly openAbout = output<void>();
+  readonly openGraph = output<void>();
+  readonly openCommandPalette = output<void>();
+  readonly viewModeChange = output<'editor' | 'kanban' | 'table'>();
 
   protected readonly searchQuery = signal('');
+  protected readonly activeTag = signal<string | null>(null);
+  protected readonly isTagsCollapsed = signal<boolean>(false);
 
   // Dropdown menus in sidebar action toolbar
   protected readonly isImportMenuOpen = signal<boolean>(false);
@@ -83,17 +89,27 @@ export class Sidebar {
   protected readonly dragOverPosition = signal<'before' | 'after' | null>(null);
   protected readonly dragOverRoot = signal<boolean>(false);
 
+  private docMatchesSearchAndTag(doc: MarkdownDocument, query: string, tag: string | null): boolean {
+    if (tag) {
+      const docTags = extractDocumentTags(doc.content, doc.tags);
+      if (!docTags.includes(tag.toLowerCase())) return false;
+    }
+    if (query) {
+      return doc.title.toLowerCase().includes(query) || doc.content.toLowerCase().includes(query);
+    }
+    return true;
+  }
+
   protected readonly filteredFavoriteDocuments = computed(() => {
     const q = this.searchQuery().toLowerCase().trim();
+    const tag = this.activeTag();
     const favs = this.store.favoriteDocuments();
-    if (!q) return favs;
-    return favs.filter(
-      (d) => d.title.toLowerCase().includes(q) || d.content.toLowerCase().includes(q),
-    );
+    return favs.filter((d) => this.docMatchesSearchAndTag(d, q, tag));
   });
 
   protected readonly folderGroups = computed<FolderGroup[]>(() => {
     const q = this.searchQuery().toLowerCase().trim();
+    const tag = this.activeTag();
     const allFolders = this.store.folders();
     const docs = this.store.sortedDocuments();
 
@@ -102,11 +118,7 @@ export class Sidebar {
         const folderDocs = docs.filter(
           (d) => d.folder && d.folder.toLowerCase() === folderName.toLowerCase(),
         );
-        const filteredDocs = q
-          ? folderDocs.filter(
-              (d) => d.title.toLowerCase().includes(q) || d.content.toLowerCase().includes(q),
-            )
-          : folderDocs;
+        const filteredDocs = folderDocs.filter((d) => this.docMatchesSearchAndTag(d, q, tag));
 
         return {
           name: folderName,
@@ -114,17 +126,23 @@ export class Sidebar {
           totalCount: folderDocs.length,
         };
       })
-      .filter((group) => !q || group.documents.length > 0);
+      .filter((group) => (!q && !tag) || group.documents.length > 0);
   });
 
   protected readonly filteredUncategorizedDocuments = computed(() => {
     const q = this.searchQuery().toLowerCase().trim();
+    const tag = this.activeTag();
     const uncat = this.store.uncategorizedDocuments();
-    if (!q) return uncat;
-    return uncat.filter(
-      (d) => d.title.toLowerCase().includes(q) || d.content.toLowerCase().includes(q),
-    );
+    return uncat.filter((d) => this.docMatchesSearchAndTag(d, q, tag));
   });
+
+  protected toggleTag(tag: string): void {
+    this.activeTag.update((t) => (t === tag ? null : tag));
+  }
+
+  protected clearTag(): void {
+    this.activeTag.set(null);
+  }
 
   protected readonly allVisibleDocIds = computed<string[]>(() => {
     const ids: string[] = [];

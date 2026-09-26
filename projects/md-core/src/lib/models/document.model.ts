@@ -11,6 +11,9 @@ export interface MarkdownDocument {
   isFavorite?: boolean;
   tags?: string[];
   order?: number;
+  isLocked?: boolean;
+  encryptedData?: string;
+  frontmatter?: Record<string, any>;
 }
 
 export function createDocument(

@@ -1,3 +1,25 @@
 <div class="preview-container" #previewContainer>
-  <markdown [data]="content()" (ready)="onReady()" />
+  @if (parsedContent().frontmatter; as fm) {
+    <div class="frontmatter-card">
+      <div class="frontmatter-header">
+        <span class="frontmatter-badge">PROPERTIES</span>
+      </div>
+      <div class="frontmatter-grid">
+        @for (entry of fm | keyvalue; track entry.key) {
+          <div class="frontmatter-row">
+            <span class="frontmatter-key">{{ entry.key }}</span>
+            <span class="frontmatter-value">
+              @if (isArray(entry.value)) {
+                {{ entry.value.join(', ') }}
+              } @else {
+                {{ entry.value }}
+              }
+            </span>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <markdown [data]="parsedContent().body" (ready)="onReady()" />
 </div>
