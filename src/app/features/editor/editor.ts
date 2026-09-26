@@ -500,8 +500,84 @@ export class Editor {
       margin: 16px 0;
     }
     a { color: #2383e2; text-decoration: underline; }
-    pre { background: #1c1c1c; border-radius: 8px; padding: 16px; overflow-x: auto; }
-    code { font-family: 'JetBrains Mono', monospace; }
+    
+    /* Code Blocks & Headers */
+    pre {
+      background: #181a1f;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      margin: 20px 0;
+      overflow: hidden;
+      padding: 0 !important;
+      position: relative;
+    }
+    .code-block-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 14px;
+      background: #21252b;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      user-select: none;
+    }
+    .code-lang {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #98c379;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    .copy-code-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: #282c34;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 4px;
+      color: #abb2bf;
+      font-size: 11.5px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .copy-code-btn:hover {
+      background: #353b45;
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+    .copy-code-btn.copied {
+      background: rgba(34, 197, 94, 0.2);
+      border-color: rgba(34, 197, 94, 0.4);
+      color: #4ade80;
+    }
+    pre code {
+      display: block;
+      padding: 14px 18px !important;
+      background: transparent !important;
+      font-family: 'JetBrains Mono', Consolas, Monaco, monospace;
+      font-size: 13.5px;
+      line-height: 1.65;
+      color: #abb2bf;
+      overflow-x: auto;
+      tab-size: 2;
+    }
+
+    /* Prism Syntax Coloring (Self-Contained Offline Support) */
+    .token.comment, .token.block-comment, .token.prolog, .token.doctype, .token.cdata { color: #727b88; font-style: italic; }
+    .token.punctuation { color: #abb2bf; }
+    .token.tag, .token.attr-name, .token.namespace, .token.deleted { color: #e06c75; }
+    .token.function-name, .token.function { color: #61afef; font-weight: 500; }
+    .token.boolean, .token.number { color: #d19a66; }
+    .token.property, .token.class-name, .token.constant, .token.symbol { color: #e5c07b; }
+    .token.selector, .token.important, .token.atrule, .token.keyword, .token.builtin { color: #c678dd; font-weight: 500; }
+    .token.string, .token.char, .token.attr-value, .token.regex { color: #98c379; }
+    .token.variable { color: #e06c75; }
+    .token.operator, .token.entity, .token.url { color: #56b6c2; }
+    .token.bold { font-weight: bold; }
+    .token.italic { font-style: italic; }
+
     table { width: 100%; border-collapse: collapse; margin: 20px 0; }
     th, td { border: 1px solid rgba(255,255,255,0.1); padding: 10px 14px; text-align: left; }
     th { background: rgba(255,255,255,0.05); }
@@ -527,6 +603,26 @@ export class Editor {
   <div class="content">
     ${renderedBody}
   </div>
+
+  <script>
+    document.querySelectorAll('.copy-code-btn').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var pre = btn.closest('pre');
+        var code = pre ? pre.querySelector('code') : null;
+        var text = code ? (code.innerText || code.textContent) : (pre ? pre.innerText : '');
+        navigator.clipboard.writeText(text).then(function() {
+          var textSpan = btn.querySelector('.copy-text');
+          if (textSpan) textSpan.innerText = 'Copied!';
+          btn.classList.add('copied');
+          setTimeout(function() {
+            if (textSpan) textSpan.innerText = 'Copy';
+            btn.classList.remove('copied');
+          }, 2000);
+        });
+      });
+    });
+  </script>
 </body>
 </html>`;
 

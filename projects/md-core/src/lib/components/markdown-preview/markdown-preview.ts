@@ -15,6 +15,7 @@ import { MarkdownComponent } from 'ngx-markdown';
 import { DocumentStore } from '../../services/document-store';
 import { parseFrontmatter } from '../../models/frontmatter.util';
 import { IndexedDbService } from '../../services/indexed-db.service';
+import { highlightAllIn, normalizeLanguage } from '../../services/syntax-highlighter';
 
 const ALERT_SVGS: Record<string, string> = {
   note: '<svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1.5a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"/></svg>',
@@ -157,6 +158,10 @@ export class MarkdownPreview {
 
   protected async onReady(): Promise<void> {
     if (!this.isBrowser) return;
+    const container = this.previewContainer()?.nativeElement;
+    if (container) {
+      highlightAllIn(container);
+    }
     this.enhanceCodeBlocks();
     this.enhanceCallouts();
     this.enhanceCheckboxes();
@@ -469,11 +474,13 @@ export class MarkdownPreview {
 
       const code = pre.querySelector('code');
       const rawClass = code?.getAttribute('class') || '';
-      const match = rawClass.match(/language-([a-zA-Z0-9_-]+)/);
-      const lang = match ? match[1].toUpperCase() : 'CODE';
+      const match = rawClass.match(/language-([a-zA-Z0-9_\-#+]+)/i);
+      const rawLang = match ? match[1] : '';
+      const normalized = normalizeLanguage(rawLang);
+      const lang = (normalized || rawLang || 'code').toUpperCase();
 
       // Skip mermaid and math blocks from generic code header
-      if (lang === 'MERMAID' || lang === 'MATH' || lang === 'LATEX') return;
+      if (lang === 'MERMAID' || lang === 'MATH' || lang === 'LATEX' || lang === 'KATEX') return;
 
       const header = document.createElement('div');
       header.className = 'code-block-header';
@@ -491,7 +498,7 @@ export class MarkdownPreview {
       const copyBtn = header.querySelector('.copy-code-btn');
       copyBtn?.addEventListener('click', (e) => {
         e.stopPropagation();
-        const codeText = code?.textContent || pre.textContent || '';
+        const codeText = code?.innerText || code?.textContent || pre.innerText || '';
         navigator.clipboard.writeText(codeText).then(() => {
           const textSpan = copyBtn.querySelector('.copy-text');
           if (textSpan) textSpan.textContent = 'Copied!';

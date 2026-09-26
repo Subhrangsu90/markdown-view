@@ -17,6 +17,7 @@ export * from './lib/services/theme.service';
 export * from './lib/services/encryption.service';
 export * from './lib/services/document-history.service';
 export * from './lib/services/indexed-db.service';
+export * from './lib/services/syntax-highlighter';
 
 // Components
 export * from './lib/components/toolbar/toolbar';
